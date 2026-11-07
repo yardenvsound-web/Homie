@@ -102,13 +102,29 @@
 - **החלטה:** הצעת AI לא מקושרת לאירוע במפתח זר. היא שורה ב-`tasks` עם `date` זהה לאירוע ו-`notes` בנוסח `הצעה לאירוע: {title}`. כך נשארות שלוש טבלאות ואין עמודה נוספת.
 
 ### `data/members.json`
+**המשפחה המומצאת** (לפי mockups.png ו-DESIGN.md). הסדר בקובץ הוא סדר התצוגה בבוחר המשויכים ובמקרא, וקובע את הצבע כשיש כמה משויכים (DESIGN.md):
+
+| id | name | תפקיד | tint (רקע) | color (פס) | avatar |
+|---|---|---|---|---|---|
+| m1 | יואב | הורה | `#E3EADC` | `#6F9170` | `assets/avatars/m1.png` |
+| m2 | דנה | הורה | `#F4DFD5` | `#CB7A56` | `assets/avatars/m2.png` |
+| m3 | נועה | ילדה | `#F7EACB` | `#D6A23E` | `assets/avatars/m3.png` |
+| m4 | איתי | ילד | `#E9DFCE` | `#6C93A6` | `assets/avatars/m4.png` |
+
+**החלטה:** יואב ודנה הם ההורים, נועה ואיתי הילדים. הבסיס ב-mockups.png: כניסה עם `dana@example.com`, "פגישת הורים" משויכת לדנה וליואב, "להסיע את נועה לבית הספר" משויכת ליואב, ואימון הכדורגל ושיעורי הבית לאיתי. בני הבית "אמא / אבא / ילד 1 / ילד 2" ב-wireframes.png הם placeholder בלבד.
+
 ```json
 [
-  { "id": "m1", "name": "…", "color": "#…", "avatar": "…", "is_parent": true,  "supabase_user_id": "uuid-של-ההורה" },
-  { "id": "m3", "name": "…", "color": "#…", "avatar": "…", "is_parent": false }
+  { "id": "m1", "name": "יואב", "tint": "#E3EADC", "color": "#6F9170", "avatar": "assets/avatars/m1.png", "is_parent": true,  "supabase_user_id": "<uuid של יואב>" },
+  { "id": "m2", "name": "דנה",  "tint": "#F4DFD5", "color": "#CB7A56", "avatar": "assets/avatars/m2.png", "is_parent": true,  "supabase_user_id": "<uuid של דנה>" },
+  { "id": "m3", "name": "נועה", "tint": "#F7EACB", "color": "#D6A23E", "avatar": "assets/avatars/m3.png", "is_parent": false },
+  { "id": "m4", "name": "איתי", "tint": "#E9DFCE", "color": "#6C93A6", "avatar": "assets/avatars/m4.png", "is_parent": false }
 ]
 ```
-נתוני דמה בלבד. `supabase_user_id` רק להורים. מזהה משתמש הוא לא סוד.
+- נתוני דמה בלבד. `supabase_user_id` רק להורים. מזהה משתמש הוא לא סוד. את שני חשבונות ההורים יוצר המשתמש ב-Milestone 1, ואז המזהים נכתבים כאן וב-`sql/policies.sql`.
+- **החלטה:** נוסף שדה `tint` (גוון הרקע) לצד `color` (הפס), כי לכל בן בית יש שני צבעים ב-DESIGN.md.
+- **אווטארים:** קובצי תמונה ב-`assets/avatars/`, אחד לכל בן בית. את האיורים מספק המשתמש (Claude לא יוצר אותם). עד שהם קיימים, האווטאר מוצג כעיגול בגוון בן הבית עם האות הראשונה של שמו.
+- אימיילי ההורים לא נשמרים בריפו. הם קיימים רק ב-Supabase Auth.
 
 ### אינדקסים וחוקי שלמות
 - אינדקס על `events(date)` ועל `tasks(date)`.
@@ -332,6 +348,8 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 │   └── calendar.js        ← יומן שבועי (F21, אחרי MVP)
 ├── data/
 │   └── members.json       ← בני הבית (נתוני דמה)
+├── assets/
+│   └── avatars/           ← m1.png … m4.png (איורים שהמשתמש מספק)
 ├── sql/
 │   ├── schema.sql         ← יצירת שלוש הטבלאות, אילוצים ואינדקסים
 │   ├── policies.sql       ← RLS

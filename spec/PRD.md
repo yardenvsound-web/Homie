@@ -138,7 +138,7 @@ Home-me היא מערכת Web משפחתית שמרכזת משימות, אירו
 |---|---|---|
 | F01 | Login בטופס כניסה לשני הורים. החשבונות נוצרים ידנית בדשבורד של Supabase. אין הרשמה, הזמנה, שחזור סיסמה או כניסה עם Google. | Must |
 | F02 | ה-Session נשאר פעיל, כדי שהטאבלט המשפחתי יישאר מחובר. | Must |
-| F03 | בני הבית נטענים מ-members.json: id, name, color, avatar, is_parent, supabase_user_id (להורים בלבד). | Must |
+| F03 | בני הבית נטענים מ-members.json: id, name, tint, color, avatar, is_parent, supabase_user_id (להורים בלבד). המשפחה המומצאת: יואב ודנה (הורים), נועה ואיתי (ילדים). הפירוט ב-ARCHITECTURE.md. | Must |
 
 ### 4.2 לוח היום
 | # | דרישה | עדיפות |

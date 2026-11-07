@@ -118,7 +118,7 @@
 ### שאילתות מרכזיות
 | מסך | שאילתה |
 |---|---|
-| לוח היום | `tasks`: `date = היום` ו-`proposal_status in ('none','approved')`. `events`: `date = היום` ו-`status = 'approved'` |
+| לוח היום | `tasks`: `date = היום הנבחר` ו-`proposal_status in ('none','approved')`. `events`: `date = היום הנבחר` ו-`status = 'approved'`. היום הנבחר מתחיל בהיום (שעון ישראל) ומשתנה בחצים (F42) |
 | יומן שבועי | אותן שאילתות לטווח של 7 ימים |
 | Pending | `events`: `status = 'pending'`. `tasks`: `proposal_status = 'proposed'`. המונה הוא סכום שני הצדדים |
 | קניות | `shopping_items`: `purchased = false`, ממוין לפי `created_at` |
@@ -359,7 +359,9 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 
 ## 8. זרימות עיקריות – מהלך הנתונים
 
-**טעינת לוח היום:** `auth.js` בודק Session ← `board.js` שולף tasks ו-events של היום ← `members.js` מצמיד שם, צבע ו-Avatar ← רינדור ← `ui.js` מעדכן "עודכן לאחרונה".
+**טעינת לוח היום:** `auth.js` בודק Session ← `board.js` שולף tasks ו-events של היום הנבחר ← `members.js` מצמיד שם, צבע ו-Avatar ← רינדור ← `ui.js` מעדכן "עודכן לאחרונה".
+
+**מעבר בין ימים (F42):** `board.js` מחזיק את היום הנבחר במשתנה בזיכרון בלבד (לא ב-localStorage ולא בכתובת), ומתחיל אותו בהיום לפי `time.js`. חץ מזיז אותו ביום אחד ושולף מחדש. "היום" מחזיר אותו להיום. רענון הדף חוזר להיום. **החלטה:** בלי פרמטר בכתובת, כדי להישאר פשוט.
 
 **יצירת משימה:** כפתור + פותח `task-modal.js` ← בדיקת קלט (כותרת חובה, תאריך חובה) ← `tasks.insert` ← רענון הלוח. משימה חדשה: `status = לביצוע`, `proposal_status = none`, `source = manual`.
 

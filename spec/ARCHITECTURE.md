@@ -153,11 +153,11 @@ RLS מופעל על שלוש הטבלאות. אין Policy למשתמש אנונ
 
 | טבלה | שני ההורים (`auth.uid()` ברשימה) | כל משתמש אחר / anon |
 |---|---|---|
-| events | select, insert, update | אין |
-| tasks | select, insert, update | אין |
+| events | select, insert, update, delete (רק כש-`source = 'home_me'`) | אין |
+| tasks | select, insert, update, delete | אין |
 | shopping_items | select, insert, update, delete | אין |
 
-אין מחיקה של משימות ואירועים, כי אין פעולת מחיקה ב-PRD.
+מחיקת משימה (F44) ומחיקת אירוע פנימי (F45) הן `delete` רגיל לפי `id`. ה-Policy של `delete` ב-`events` כוללת גם את התנאי `source = 'home_me'`, כדי שאירוע Google לא יימחק (מחיקה שלו הייתה גורמת ל-W1 לקלוט אותו שוב). מחיקה מקבילה של אותו פריט על ידי שני ההורים לא דורשת עדכון מותנה: השנייה פשוט לא מוחקת דבר.
 
 ### עדכון מותנה
 course-stack.md דורש עדכון מותנה כשפעולה יכולה להתבצע על ידי שני משתמשים בו-זמנית. לכן בפעולות אישור ודחייה:
@@ -267,7 +267,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 ### חזרתיות (F16, אחרי MVP) – בדפדפן
 - בשמירת משימה עם `daily` או `weekly`, `js/recurrence.js` מחשב את המופעים: 28 שורות ליומית, 4 לשבועית (4 שבועות מיום התחלת המשימה). **החלטה:** שבועית חוזרת באותו יום בשבוע.
 - הכנסה אחת (`insert` של מערך שורות). כל מופע שורה עצמאית.
-- אין מחיקה או חידוש אוטומטי של מופעים.
+- אין מחיקה או חידוש אוטומטי של מופעים. מחיקה ידנית (F44) מוחקת מופע אחד בלבד.
 
 ### חפיפות (F10, אחרי MVP) – בדפדפן
 - `js/overlap.js` רץ על פריטי היום אחרי הטעינה, לכל בן בית בנפרד (לפי `assigned_member_ids`).
@@ -365,6 +365,8 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 **מעבר בין ימים (F42):** `board.js` מחזיק את היום הנבחר במשתנה בזיכרון בלבד (לא ב-localStorage ולא בכתובת), ומתחיל אותו בהיום לפי `time.js`. חץ מזיז אותו ביום אחד ושולף מחדש. "היום" מחזיר אותו להיום. רענון הדף חוזר להיום. **החלטה:** בלי פרמטר בכתובת, כדי להישאר פשוט.
 
 **יצירת משימה:** כפתור + פותח `task-modal.js` ← בדיקת קלט (כותרת חובה, תאריך חובה) ← `tasks.insert` ← רענון הלוח. משימה חדשה: `status = לביצוע`, `proposal_status = none`, `source = manual`.
+
+**מחיקת משימה או אירוע פנימי:** "מחיקה" בחלון העריכה ← אישור קצר ← `tasks.delete` או `events.delete` לפי `id` ← סגירת החלון ורענון הלוח.
 
 **שינוי סטטוס מכרטיס:** `tasks.update({status, updated_at}).eq('id', …)` ← רענון הכרטיס. עריכה מקבילה: Last Write Wins.
 

@@ -173,7 +173,8 @@ course-stack.md דורש עדכון מותנה כשפעולה יכולה להת�
 המודל מציע בלבד. שום שינוי לא קורה בלי אישור הורה. הקריאה למודל לעולם לא יוצאת מהדפדפן.
 
 ### מודל וממשק
-- מודל: `gemini-3.5-flash-lite`, כפי ב-tech-stack.md. שם המודל מוגדר פעם אחת בהגדרות ה-Workflow.
+- מודל: `gemini-3.8-flash`, כפי שאושר ב-tech-stack.md (14.10.2026). שם המודל מוגדר פעם אחת בהגדרות ה-Workflow (ואחרי MVP גם בפונקציה), כך שהחלפה היא שינוי במקום אחד.
+- המכסה החינמית של המודל לא אומתה. בודקים אותה ב-AI Studio לפני ההרצה של `ai-tests.md`. אם היא נמוכה מדי, החלופה היא `gemini-3.5-flash-lite` (דורשת אישור).
 - קריאה בנתיב ה-Interactions API: `POST https://generativelanguage.googleapis.com/v1beta/interactions`, המפתח בכותרת `x-goog-api-key`.
 - פלט במבנה קבוע: `response_format` עם `type: text`, `mime_type: application/json` ו-`schema`.
 - **החלטה:** לא ידוע לי שדה נפרד להוראות מערכת בממשק הזה, ולכן ההוראות והאירוע נשלחים יחד בשדה `input`.

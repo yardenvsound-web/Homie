@@ -268,7 +268,7 @@ Home-me היא **Responsive Web App** למחשב, לטלפון ולטאבלט. �
 | Google Calendar | קריאה בלבד, חשבון אחד שמחובר מראש ל-n8n, יומן בדיקה |
 | אוטומציות | n8n |
 | מייל | n8n, מחשבון Gmail של הסטודנט, לכתובות בדיקה |
-| AI | Gemini Flash (ברירת מחדל לפי course-stack.md), נתוני דמה בלבד |
+| AI | Gemini Flash (ברירת מחדל לפי course-stack.md): `gemini-3.8-flash`, לפי tech-stack.md. נתוני דמה בלבד |
 | Serverless | פונקציה ב-Vercel או Netlify, רק כש-F37 נכנס |
 | גרסאות | Git ו-GitHub, ענף main בלבד |
 

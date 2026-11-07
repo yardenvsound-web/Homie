@@ -327,7 +327,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 ├── css/
 │   └── styles.css         ← משתני צבע, RTL, מובייל קודם (375px), רכיבים
 ├── js/
-│   ├── config.js          ← SUPABASE_URL, SUPABASE_ANON_KEY, TIMEZONE, שעות ה-Timeline, מספר השבועות של חזרתיות (4)
+│   ├── config.js          ← SUPABASE_URL, SUPABASE_ANON_KEY, TIMEZONE, שעות ה-Timeline (ברירת מחדל 07–22, PRD 4.13), מספר השבועות של חזרתיות (4)
 │   ├── supabase.js        ← יצירת client (ה-global `supabase` מה-CDN)
 │   ├── auth.js            ← בדיקת Session, כניסה, יציאה, ההורה הנוכחי
 │   ├── members.js         ← טעינת data/members.json ועזרים (שם, צבע, Avatar)

@@ -1,6 +1,7 @@
 # PRD – Home-me V1
 
-מקורות: product-10-definitions.md (מקור האמת), MVP.md (פיצ'רים, MoSCoW ומסלול), course-stack.md (אילוצים טכניים).
+מקורות: product-10-definitions.md (מסמך המקור של המוצר), MVP.md (פיצ'רים, MoSCoW ומסלול), course-stack.md (אילוצים טכניים).
+**מסמך זה גובר על מסמכי המקור.** חלק ממה שמופיע ב-product-10-definitions.md נחתך או נדחה כאן בכוונה (למשל F32 עדכון מ-Google, ומייל על אירוע חדש). כשיש הבדל, ה-PRD קובע.
 מספרי הפיצ'רים (F01–F41) הם המספרים מ-MVP.md.
 
 ---

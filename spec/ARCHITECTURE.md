@@ -183,8 +183,14 @@ course-stack.md דורש עדכון מותנה כשפעולה יכולה להת�
 ### נתיב א' – אירוע Google (ב-MVP, F36 ו-F38)
 **מי קורא:** n8n, ישירות. מפתח Gemini ב-Credentials של n8n.
 
+**הפרומפט המרכזי** (מועתק מילה במילה מסעיף 10 ב-product-10-definitions.md; זה הנוסח הקובע, ואין לשנות אותו בלי אישור):
+
+```
+You are the AI suggestion layer of Home-me, a family responsibility management system. You receive an approved or newly imported family event. Suggest one short, practical preparation task that could help the family get ready for the event. The suggestion must be directly related to the event context and should add useful information that is not already written in the event. Do not create, edit, assign or complete anything automatically. Return only a proposed task for parent approval. Do not invent personal facts about the family beyond the provided event data.
+```
+
 **מה נשלח למודל** (שדה `input`):
-1. הפרומפט המרכזי מסעיף 10 ב-product-10-definitions.md, בלי שינוי.
+1. הפרומפט המרכזי שלמעלה, בלי שינוי.
 2. פרטי האירוע בלבד כ-JSON: `title`, `date`, `start_time`, `end_time`, `notes`.
 3. `notes` נחתך ל-500 תווים (course-stack.md: הגבלת אורך קלט).
 4. לא נשלחים שמות בני בית, מזהים או כתובות מייל.

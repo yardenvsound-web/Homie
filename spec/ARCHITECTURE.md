@@ -61,7 +61,7 @@
 | start_time | time, null | null = אירוע יום שלם |
 | end_time | time, null | |
 | source | text, not null | `home_me` או `google` |
-| status | text, not null, default `approved` | `pending` או `approved`. אירוע פנימי נוצר `approved`. אירוע Google נוצר `pending` |
+| status | text, not null, default `approved` | `pending`, `approved` או `dismissed`. אירוע פנימי נוצר `approved`. אירוע Google נוצר `pending`. `dismissed` = הורה התעלם (F43). השורה נשארת בטבלה כדי ש-W1 לא יקלוט אותה שוב |
 | assigned_member_ids | jsonb, not null, default `[]` | מערך של מזהי בני בית מ-members.json |
 | google_event_id | text, null, **unique** | מניעת כפילות. null באירוע פנימי (Postgres מתיר כמה null) |
 | updated_from_google | boolean, not null, default false | נכתב רק אחרי MVP (F32) |
@@ -162,6 +162,7 @@ RLS מופעל על שלוש הטבלאות. אין Policy למשתמש אנונ
 ### עדכון מותנה
 course-stack.md דורש עדכון מותנה כשפעולה יכולה להתבצע על ידי שני משתמשים בו-זמנית. לכן בפעולות אישור ודחייה:
 - אישור אירוע Google: `update … where id = ? and status = 'pending'`.
+- התעלמות מאירוע Google (F43): `update … set status = 'dismissed' where id = ? and status = 'pending'`.
 - אישור או דחיית הצעת AI: `update … where id = ? and proposal_status = 'proposed'`.
 - אם לא עודכנה אף שורה, הלקוח מציג "הפריט כבר טופל", ומרענן. עריכה רגילה של משימה או אירוע היא Last Write Wins ללא תנאי.
 
@@ -252,7 +253,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 1. טריגרים: Schedule כל 4 שעות, ו-Manual Trigger להרצה לפני הדמו.
 2. Google Calendar, Get Many events מהיומן, מהיום ועד 30 יום קדימה. **החלטה:** חלון של 30 יום, כדי להגביל את כמות האירועים.
 3. לכל אירוע: חיפוש ב-`events` לפי `google_event_id`.
-4. אם קיים: דלג (עדכון הוא F32, אחרי MVP).
+4. אם קיים, בכל סטטוס (כולל `dismissed`): דלג (עדכון הוא F32, אחרי MVP).
 5. אם חדש: המרה ל-`date`, `start_time`, `end_time` בשעון ישראל, והכנסה ל-`events` עם `source = google`, `status = pending`, `assigned_member_ids = []`.
 6. קריאה למודל לפי סעיף 4 נתיב א', בדיקה, והכנסת ההצעה ל-`tasks`.
 7. אילוץ ה-unique על `google_event_id` הוא רשת ביטחון נגד כפילות.
@@ -367,7 +368,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 
 **שינוי סטטוס מכרטיס:** `tasks.update({status, updated_at}).eq('id', …)` ← רענון הכרטיס. עריכה מקבילה: Last Write Wins.
 
-**אירוע Google, מקליטה ללוח:** W1 מכניס `pending` ← הורה נכנס ל-Pending (המונה מראה את הפריט) ← Modal אישור ושיוך ← עדכון מותנה (`status = pending`) ל-`approved` עם `assigned_member_ids` ← האירוע מופיע בלוח.
+**אירוע Google, מקליטה ללוח:** W1 מכניס `pending` ← הורה נכנס ל-Pending (המונה מראה את הפריט) ← Modal אישור ושיוך ← עדכון מותנה (`status = pending`) ל-`approved` עם `assigned_member_ids` ← האירוע מופיע בלוח. או: "התעלם" בכרטיס ← עדכון מותנה ל-`dismissed` ← האירוע יוצא מהתיבה והמונה יורד.
 
 **הצעת AI:** W1 שומר `proposed` ← הורה ב-Pending ← אישור (עדכון מותנה ל-`approved`) או דחייה (`rejected`) ← משימה מאושרת מופיעה בלוח.
 

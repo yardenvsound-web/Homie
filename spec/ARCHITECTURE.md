@@ -392,7 +392,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 
 **הצעת AI:** W1 שומר `proposed` ← הורה ב-Pending ← אישור (עדכון מותנה ל-`approved`) או דחייה (`rejected`) ← משימה מאושרת מופיעה בלוח.
 
-**קניות:** Quick Add בודק (בלי רגישות לאותיות) אם קיים פריט פעיל באותו שם. אם כן, מתריע ומציע לעדכן כמות. אחרת `insert`. סימון "נקנה" מעדכן `purchased = true` והפריט נעלם. מחיקה היא `delete` מיידי.
+**קניות:** Quick Add בודק (בלי רגישות לאותיות) אם קיים פריט פעיל באותו שם. אם כן, מתריע ומציע לעדכן כמות. אחרת `insert`. סימון "נקנה" מעדכן `purchased = true` והפריט נעלם. "בטל" בהודעה (F46, 5 שניות) מעדכן חזרה `purchased = false` ומרענן את הרשימה. מחיקה היא `delete` מיידי.
 
 ---
 

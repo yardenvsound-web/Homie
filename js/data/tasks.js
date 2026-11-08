@@ -5,13 +5,14 @@ import { db } from '../supabase.js';
 // `notes` is included so the edit modal opens filled without another query.
 const BOARD_FIELDS = 'id, title, date, time, status, assigned_member_ids, notes, source, created_at';
 
-// Tasks shown on the daily board: regular tasks and approved AI suggestions.
-// Proposed / rejected AI suggestions belong to the Pending screen only.
-export async function getBoardTasks(date) {
+// Tasks shown on the board for dates from..to (inclusive): regular tasks and
+// approved AI suggestions. Proposed / rejected AI suggestions belong to Pending only.
+export async function getBoardTasks(from, to = from) {
   const { data, error } = await db
     .from('tasks')
     .select(BOARD_FIELDS)
-    .eq('date', date)
+    .gte('date', from)
+    .lte('date', to)
     .in('proposal_status', ['none', 'approved'])
     .order('time', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: true });

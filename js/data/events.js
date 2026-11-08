@@ -5,13 +5,14 @@ import { db } from '../supabase.js';
 // `notes` is included so the edit modal opens filled without another query.
 const BOARD_FIELDS = 'id, title, date, start_time, end_time, source, assigned_member_ids, notes, updated_from_google, updated_at, created_at';
 
-// Events shown on the daily board: approved only (pending / dismissed Google
-// events never reach the board).
-export async function getBoardEvents(date) {
+// Events shown on the board for dates from..to (inclusive): approved only
+// (pending / dismissed Google events never reach the board).
+export async function getBoardEvents(from, to = from) {
   const { data, error } = await db
     .from('events')
     .select(BOARD_FIELDS)
-    .eq('date', date)
+    .gte('date', from)
+    .lte('date', to)
     .eq('status', 'approved')
     .order('start_time', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: true });

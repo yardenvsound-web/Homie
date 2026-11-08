@@ -16,7 +16,16 @@
   <body class="is-loading">
     <main class="page board">
       <div class="board__head">
-        <h1 class="screen-title">לוח היום</h1>
+        <h1 class="visually-hidden">לוח היום</h1>
+        <!-- View menu (F51): daily / weekly / monthly -->
+        <div class="view-switch">
+          <button type="button" class="view-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="view-menu"></button>
+          <ul class="view-menu" id="view-menu" role="menu" hidden>
+            <li role="none"><button type="button" class="add__item view-menu__item" role="menuitemradio" data-view="day" aria-checked="true"></button></li>
+            <li role="none"><button type="button" class="add__item view-menu__item" role="menuitemradio" data-view="week" aria-checked="false"></button></li>
+            <li role="none"><button type="button" class="add__item view-menu__item" role="menuitemradio" data-view="month" aria-checked="false"></button></li>
+          </ul>
+        </div>
         <div class="add">
           <button type="button" class="btn btn--primary add__toggle add__toggle--wide" aria-expanded="false" aria-controls="add-menu"></button>
           <button type="button" class="fab add__toggle add__toggle--phone" aria-expanded="false" aria-controls="add-menu"></button>
@@ -49,15 +58,7 @@
           <div class="skeleton__row"></div>
         </div>
 
-        <section class="board-section" id="untimed" aria-labelledby="untimed-title" hidden>
-          <h2 class="section-title" id="untimed-title">משימות ללא שעה</h2>
-          <ul class="card-list"></ul>
-        </section>
-
-        <section class="board-section" id="timeline" aria-labelledby="timeline-title" hidden>
-          <h2 class="section-title" id="timeline-title">היום לפי שעות</h2>
-          <ol class="timeline"></ol>
-        </section>
+        <div class="board__view" hidden></div>
 
         <div class="empty-state" hidden>
           <span class="empty-state__icon">

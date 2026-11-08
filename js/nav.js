@@ -12,7 +12,7 @@ import { countProposedTasks } from './data/tasks.js';
 import { MESSAGES, icon, showError, clearError, renderLastUpdated } from './ui.js';
 
 const TABS = [
-  { page: 'index', href: 'index.html', label: 'לוח היום', icon: 'home' },
+  { page: 'index', href: 'index.html', label: 'לוח', icon: 'home' },
   { page: 'shopping', href: 'shopping.html', label: 'קניות', icon: 'cart' },
   { page: 'pending', href: 'pending.html', label: 'ממתין לאישור', icon: 'clock' },
 ];

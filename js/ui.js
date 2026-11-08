@@ -62,12 +62,24 @@ export const MESSAGES = {
   endRequired: 'נא למלא שעת סיום',
   endBeforeStart: 'שעת הסיום צריכה להיות אחרי שעת ההתחלה',
   endWithoutStart: 'בלי שעת התחלה, האירוע הוא יום שלם. נא למחוק את שעת הסיום',
+
+  // Shopping list (Milestone 5)
+  shoppingEmpty: 'הרשימה ריקה',
+  productNameLabel: 'שם מוצר',
+  quantityLabel: 'כמות',
+  productRequired: 'נא למלא שם מוצר',
+  quantityInvalid: 'כמות צריכה להיות מספר שלם, 1 לפחות',
+  adding: 'מוסיף…',
+  addItemFailed: 'לא הצלחנו להוסיף את המוצר',
+  quantityValue: (qty) => `כמות: ${qty}`,
+  markPurchased: (name, qty) => (qty > 1 ? `סמן כנקנה: ${name}, ${qty}` : `סמן כנקנה: ${name}`),
 };
 
 // Input limits (PRD 4.13).
 export const LIMITS = {
   title: 100,
   notes: 500,
+  productName: 60,
 };
 
 // Task status: English code in the database, Hebrew label in the UI (ARCHITECTURE.md, section 2).

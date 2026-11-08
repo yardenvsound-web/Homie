@@ -62,6 +62,11 @@ textarea:focus-visible {
   color: var(--color-text);
 }
 
+.tagline-sub {
+  font: var(--font-body);
+  color: var(--color-text-secondary);
+}
+
 .screen-title {
   font: var(--font-title-l);
 }

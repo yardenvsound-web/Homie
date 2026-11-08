@@ -1106,7 +1106,8 @@ body:has(.topbar) .page .screen-title {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 1;
+  /* 'auto', not 1: Safari treats a 0 basis as zero height and the modal vanishes */
+  flex: 1 1 auto;
 }
 
 .modal__header {
@@ -1125,7 +1126,7 @@ body:has(.topbar) .page .screen-title {
 
 /* Only the body scrolls; the header and the buttons stay in place */
 .modal__body {
-  flex: 1;
+  flex: 1 1 auto; /* see .modal__form */
   min-height: 0;
   overflow-y: auto;
   display: flex;

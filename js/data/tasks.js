@@ -2,7 +2,8 @@
 
 import { db } from '../supabase.js';
 
-const BOARD_FIELDS = 'id, title, date, time, status, assigned_member_ids, created_at';
+// `notes` is included so the edit modal opens filled without another query.
+const BOARD_FIELDS = 'id, title, date, time, status, assigned_member_ids, notes, source, created_at';
 
 // Tasks shown on the daily board: regular tasks and approved AI suggestions.
 // Proposed / rejected AI suggestions belong to the Pending screen only.
@@ -18,14 +19,37 @@ export async function getBoardTasks(date) {
   return data;
 }
 
-// Last Write Wins (F41): a plain update with no condition on the old value.
-// Resolves { found: false } when the row no longer exists.
-export async function setTaskStatus(id, status) {
+// New manual task (F12). fields: { title, date, time, status, assigned_member_ids, notes }.
+export async function createTask(fields) {
   const { data, error } = await db
     .from('tasks')
-    .update({ status, updated_at: new Date().toISOString() })
+    .insert({ ...fields, source: 'manual', proposal_status: 'none', recurrence_type: 'none' })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Edit (F14). Last Write Wins (F41): a plain update with no condition on the old
+// value. source / proposal_status are never touched, so an approved AI task stays one.
+// Resolves { found: false } when the row no longer exists.
+export async function updateTask(id, fields) {
+  const { data, error } = await db
+    .from('tasks')
+    .update({ ...fields, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('id');
+  if (error) throw error;
+  return { found: data.length > 0 };
+}
+
+export function setTaskStatus(id, status) {
+  return updateTask(id, { status });
+}
+
+// Delete (F44). Resolves { found: false } when the row was already deleted.
+export async function deleteTask(id) {
+  const { data, error } = await db.from('tasks').delete().eq('id', id).select('id');
   if (error) throw error;
   return { found: data.length > 0 };
 }

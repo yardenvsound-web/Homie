@@ -15,7 +15,17 @@
   </head>
   <body class="is-loading">
     <main class="page board">
-      <h1 class="screen-title">לוח היום</h1>
+      <div class="board__head">
+        <h1 class="screen-title">לוח היום</h1>
+        <div class="add">
+          <button type="button" class="btn btn--primary add__toggle add__toggle--wide" aria-expanded="false" aria-controls="add-menu"></button>
+          <button type="button" class="fab add__toggle add__toggle--phone" aria-expanded="false" aria-controls="add-menu"></button>
+          <ul class="add__menu" id="add-menu" hidden>
+            <li><button type="button" class="add__item" data-add="task"></button></li>
+            <li><button type="button" class="add__item" data-add="event"></button></li>
+          </ul>
+        </div>
+      </div>
 
       <div class="daybar">
         <button type="button" class="icon-btn" data-day="prev"></button>
@@ -50,6 +60,7 @@
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
           </span>
           <p class="empty-state__text"></p>
+          <button type="button" class="btn btn--primary empty-state__add"></button>
         </div>
       </div>
     </main>

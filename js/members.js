@@ -54,3 +54,51 @@ export function renderAvatar(member, size = 's', fallbackLetter = '?') {
   }
   return el;
 }
+
+// Multi-select of household members (DESIGN.md "בוחר בני בית"), in members.json
+// order. Each chip is a real checkbox + avatar + name, so the selection is never
+// shown by color alone. getSelected() returns ids in members.json order.
+export function renderMemberPicker({ id, legend, selectedIds = [] }) {
+  const selected = new Set(selectedIds);
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'member-picker';
+  const legendEl = document.createElement('legend');
+  legendEl.className = 'field__label';
+  legendEl.textContent = legend;
+  const list = document.createElement('div');
+  list.className = 'member-picker__list';
+
+  const inputs = [];
+  for (const member of getMembers()) {
+    const label = document.createElement('label');
+    label.className = 'member-chip';
+    label.style.setProperty('--chip-tint', member.tint);
+
+    const check = document.createElement('span');
+    check.className = 'check';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'check__input';
+    input.id = `${id}-${member.id}`;
+    input.value = member.id;
+    input.checked = selected.has(member.id);
+    const box = document.createElement('span');
+    box.className = 'check__box';
+    box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    check.append(input, box);
+
+    const name = document.createElement('span');
+    name.textContent = member.name;
+    label.append(check, renderAvatar(member, 'xs'), name);
+    list.append(label);
+    inputs.push(input);
+  }
+
+  fieldset.append(legendEl, list);
+  return {
+    el: fieldset,
+    firstInput: inputs[0] ?? null,
+    getSelected: () => inputs.filter((i) => i.checked).map((i) => i.value),
+  };
+}

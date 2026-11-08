@@ -17,3 +17,14 @@ export async function getBoardEvents(date) {
   if (error) throw error;
   return data;
 }
+
+// New internal event (F18). fields: { title, date, start_time, end_time, assigned_member_ids, notes }.
+export async function createEvent(fields) {
+  const { data, error } = await db
+    .from('events')
+    .insert({ ...fields, source: 'homie', status: 'approved' })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data;
+}

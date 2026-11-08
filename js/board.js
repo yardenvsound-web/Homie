@@ -1,7 +1,8 @@
 // Daily board (index.html): untimed items + hourly Timeline.
-// F04, F05, F06, F07, F09, F42 (day arrows), F47 (refresh), F41 (Last Write Wins).
-// Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): add button and task editing (M4),
-// event editing, faded done tasks and "last updated" (M7), overlap chip (M8).
+// F04, F05, F06, F07, F09, F42 (day arrows), F47 (refresh), F41 (Last Write Wins),
+// F12/F14/F44 (task modal), F18 (event modal) through the add menu.
+// Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): event editing, faded done
+// tasks and "last updated" (M7), overlap chip (M8).
 
 import { initProtectedPage } from './nav.js';
 import { getMembers, renderAvatar } from './members.js';
@@ -10,6 +11,8 @@ import { getBoardEvents } from './data/events.js';
 import { todayISO, addDays, formatDayLabel, formatTime, minutesOf } from './time.js';
 import { TIMELINE_START_HOUR, TIMELINE_END_HOUR } from './config.js';
 import { MESSAGES, STATUS_LABELS, SOURCE_TAGS, icon, showError, clearError } from './ui.js';
+import { openTaskModal } from './task-modal.js';
+import { openEventModal } from './event-modal.js';
 
 const el = {
   content: document.querySelector('.board__content'),
@@ -25,11 +28,17 @@ const el = {
   empty: document.querySelector('.empty-state'),
   emptyText: document.querySelector('.empty-state__text'),
   skeleton: document.querySelector('.skeleton'),
+  add: document.querySelector('.add'),
+  addMenu: document.querySelector('.add__menu'),
+  addToggles: document.querySelectorAll('.add__toggle'),
+  emptyAdd: document.querySelector('.empty-state__add'),
 };
 
 // In memory only: a page reload always opens on today (F42, ARCHITECTURE.md section 8).
 let selectedDate = todayISO();
 let loadSeq = 0;
+// Edited task whose card gets focus back once the board has re-rendered.
+let focusTaskId = null;
 
 // ---------- Members and colors (DESIGN.md "כללי צבע לפי מספר המשויכים") ----------
 
@@ -97,9 +106,18 @@ function renderTaskCard(task) {
 
   const body = document.createElement('div');
   body.className = 'item-card__body';
+  // The title button covers the whole card (CSS) and opens the edit modal (F14).
+  // The checkbox sits above it, so a click on the checkbox only changes status.
   const title = document.createElement('h3');
   title.className = 'item-card__title';
-  title.textContent = task.title;
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'item-card__open';
+  open.dataset.taskId = task.id;
+  open.textContent = task.title;
+  open.setAttribute('aria-label', MESSAGES.editTask(task.title));
+  open.addEventListener('click', () => openTaskEditor(task, open));
+  title.append(open);
   const meta = document.createElement('p');
   meta.className = 'item-card__meta';
   if (task.time) meta.append(timeMeta(formatTime(task.time)));
@@ -276,6 +294,12 @@ function renderBoard(tasks, events) {
   else el.timelineList.replaceChildren();
   el.timeline.hidden = timed.length === 0;
 
+  if (focusTaskId) {
+    const target = document.querySelector(`.item-card__open[data-task-id="${focusTaskId}"]`);
+    (target ?? visibleToggle()).focus();
+    focusTaskId = null;
+  }
+
   el.emptyText.textContent = selectedDate === todayISO() ? MESSAGES.emptyToday : MESSAGES.emptyOtherDay;
   el.empty.hidden = items.length > 0;
 }
@@ -361,9 +385,102 @@ function refresh() {
   loadDay({ keep: true });
 }
 
+// ---------- Add menu and modals ----------
+
+// Toggle button that is visible at the current width (FAB on phone, "הוספה ▾" wider).
+function visibleToggle() {
+  return [...el.addToggles].find((b) => b.getClientRects().length > 0) ?? el.addToggles[0];
+}
+
+// After a save the board shows the item's date, so the new item is always
+// visible right away (ADR-9). Same date: reload in place.
+function afterSave(date) {
+  if (date === selectedDate) loadDay({ keep: true });
+  else goTo(date);
+}
+
+function afterGone() {
+  loadDay({ keep: true }); // clears old alerts synchronously, so show the message after
+  showError(el.alerts, MESSAGES.taskGone, () => loadDay({ keep: true }));
+}
+
+function openTaskEditor(task, opener) {
+  openTaskModal({
+    task,
+    opener,
+    fallbackFocus: visibleToggle(),
+    onSaved: (date) => {
+      focusTaskId = task.id;
+      afterSave(date);
+    },
+    onDeleted: () => loadDay({ keep: true }),
+    onGone: afterGone,
+  });
+}
+
+function openNew(kind, opener) {
+  const options = { date: selectedDate, opener, fallbackFocus: visibleToggle(), onSaved: afterSave };
+  if (kind === 'event') openEventModal(options);
+  else openTaskModal(options);
+}
+
+function setMenuOpen(open, returnFocus = false) {
+  el.addMenu.hidden = !open;
+  for (const toggle of el.addToggles) toggle.setAttribute('aria-expanded', String(open));
+  if (open) el.addMenu.querySelector('.add__item').focus();
+  else if (returnFocus) visibleToggle().focus();
+}
+
+function initAddMenu() {
+  const [wide, phone] = [
+    document.querySelector('.add__toggle--wide'),
+    document.querySelector('.add__toggle--phone'),
+  ];
+  const wideText = document.createElement('span');
+  wideText.textContent = MESSAGES.add;
+  wide.append(icon('plus'), wideText, icon('chevron-down'));
+  phone.append(icon('plus'));
+  phone.setAttribute('aria-label', MESSAGES.add);
+
+  const items = [...el.addMenu.querySelectorAll('.add__item')];
+  for (const item of items) {
+    const isEvent = item.dataset.add === 'event';
+    const text = document.createElement('span');
+    text.textContent = isEvent ? MESSAGES.newEventTitle : MESSAGES.newTaskTitle;
+    item.append(icon(isEvent ? 'calendar' : 'task'), text);
+    item.addEventListener('click', () => {
+      const opener = visibleToggle();
+      setMenuOpen(false);
+      openNew(item.dataset.add, opener);
+    });
+  }
+
+  for (const toggle of el.addToggles) {
+    toggle.addEventListener('click', () => setMenuOpen(el.addMenu.hidden));
+  }
+  el.add.addEventListener('keydown', (e) => {
+    if (el.addMenu.hidden) return;
+    if (e.key === 'Escape') {
+      setMenuOpen(false, true);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const i = items.indexOf(document.activeElement);
+      const next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+      items[(next + items.length) % items.length].focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!el.addMenu.hidden && !el.add.contains(e.target)) setMenuOpen(false);
+  });
+
+  el.emptyAdd.textContent = MESSAGES.addTask;
+  el.emptyAdd.addEventListener('click', () => openNew('task', el.emptyAdd));
+}
+
 // ---------- Start ----------
 
 initDayBar();
+initAddMenu();
 initProtectedPage({
   page: 'index',
   title: 'לוח היום',

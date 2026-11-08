@@ -475,7 +475,7 @@ body:has(.bottomnav) {
 }
 
 /* On phone the screen title lives in the top bar; keep the h1 for screen readers */
-body:has(.topbar) .page > .screen-title {
+body:has(.topbar) .page .screen-title {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -832,6 +832,344 @@ body:has(.topbar) .page > .screen-title {
   font: var(--font-title-s);
 }
 
+/* ---------- Danger buttons (delete) ---------- */
+
+.btn--danger {
+  background: var(--color-danger);
+  color: var(--color-surface);
+}
+
+.btn--danger-text {
+  background: transparent;
+  color: var(--color-danger);
+  padding: 0 var(--space-2);
+}
+
+.btn--danger-text .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.btn--danger-text:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* ---------- Clickable task card (opens the edit modal) ---------- */
+
+.item-card--task {
+  position: relative;
+}
+
+.item-card__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* The button's hit area covers the whole card */
+.item-card__open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-l);
+}
+
+.item-card__open:focus-visible {
+  box-shadow: none;
+}
+
+.item-card--task:has(.item-card__open:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.item-card--task:hover {
+  border-color: var(--color-border-field);
+}
+
+/* The checkbox sits above the card button */
+.item-card--task .check {
+  z-index: 1;
+}
+
+/* ---------- Board head + add menu ---------- */
+
+/* Phone: the title is screen-reader only and the + button is fixed, so the head
+   takes no space (no extra gap above the day bar). Wider: title + "הוספה ▾" row. */
+.board__head,
+.add {
+  display: contents;
+}
+
+/* Phone: the "הוספה ▾" button is hidden and the round + button is used */
+.add__toggle--wide {
+  display: none;
+}
+
+.add__toggle .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.fab {
+  position: fixed;
+  left: var(--space-screen-margin);
+  bottom: calc(var(--size-touch-target) + var(--space-5) + var(--space-3) + env(safe-area-inset-bottom));
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-fab);
+  height: var(--size-fab);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+}
+
+.fab .icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.fab:active {
+  background: var(--color-primary-pressed);
+}
+
+.add__menu {
+  position: fixed;
+  left: var(--space-screen-margin);
+  bottom: calc(var(--size-touch-target) + var(--space-5) + var(--space-3) + var(--size-fab) + var(--space-2) + env(safe-area-inset-bottom));
+  z-index: 11;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  min-width: calc(var(--space-6) * 4); /* 192 */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-soft);
+}
+
+.add__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-text);
+  font: var(--font-label);
+  font-family: var(--font-family);
+  text-align: start;
+  cursor: pointer;
+}
+
+.add__item .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.add__item:hover {
+  background: var(--color-bg-done);
+}
+
+/* Room so the + button never covers the last card */
+.board {
+  padding-bottom: calc(var(--size-fab) + var(--space-4));
+}
+
+/* ---------- Modal (dialog) ---------- */
+
+.modal {
+  width: calc(100% - 2 * var(--space-3));
+  max-width: calc(var(--space-6) * 10); /* 480 */
+  max-height: calc(100dvh - 2 * var(--space-3));
+  margin: var(--space-3) auto auto; /* phone: pinned to the top */
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
+}
+
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal::backdrop {
+  background: var(--color-scrim);
+}
+
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  padding-inline-end: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal__title {
+  font: var(--font-title-m);
+}
+
+/* Only the body scrolls; the header and the buttons stay in place */
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.modal__alerts:empty {
+  display: none;
+}
+
+.modal__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.modal__footer .btn {
+  white-space: nowrap;
+}
+
+.modal__footer .btn--primary,
+.modal__footer .btn--danger {
+  flex: 1;
+}
+
+/* Delete on the far side, away from "save" */
+.modal__delete {
+  margin-inline-start: auto;
+}
+
+.modal__footer:has(.modal__delete) {
+  gap: var(--space-1);
+}
+
+.modal__footer:has(.modal__delete) .btn--primary {
+  flex: 1 1 auto;
+}
+
+.modal__delete {
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+}
+
+.modal--confirm {
+  max-width: calc(var(--space-6) * 7); /* 336 */
+  margin: auto;
+}
+
+.modal--confirm .modal__title {
+  padding: var(--space-4) var(--space-3) var(--space-2);
+  font: var(--font-title-s);
+}
+
+.modal--confirm .modal__footer {
+  border-top: 0;
+}
+
+/* ---------- Form fields in modals ---------- */
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.field-row > .field {
+  min-width: 0;
+}
+
+.field__input--textarea {
+  min-height: calc(var(--size-button-height) * 2);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+.field__input--select {
+  appearance: none;
+}
+
+.field__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ---------- Member picker (multi-select) ---------- */
+
+.member-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.member-picker legend {
+  padding: 0;
+  margin-bottom: var(--space-1);
+}
+
+.member-picker__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--size-touch-target);
+  padding-inline-end: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-m);
+  font: var(--font-body);
+  cursor: pointer;
+}
+
+/* Selected: member tint, 1.5 green border, semibold, and the checked box */
+.member-chip:has(.check__input:checked) {
+  background: var(--chip-tint);
+  border: 1.5px solid var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.member-chip .check__input:checked + .check__box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 /* ---------- Wider screens ---------- */
 
 @media (min-width: 768px) {
@@ -942,7 +1280,43 @@ body:has(.topbar) .page > .screen-title {
     padding-bottom: 0;
   }
 
-  body:has(.topbar) .page > .screen-title {
+  .board__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  /* Add menu: "הוספה ▾" next to the title instead of the round + button */
+  .add {
+    display: block;
+    position: relative;
+  }
+
+  .add__toggle--wide {
+    display: inline-flex;
+  }
+
+  .fab {
+    display: none;
+  }
+
+  .add__menu {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    bottom: auto;
+    left: 0;
+  }
+
+  .board {
+    padding-bottom: var(--space-5);
+  }
+
+  .modal {
+    margin: auto; /* centered */
+  }
+
+  body:has(.topbar) .page .screen-title {
     position: static;
     width: auto;
     height: auto;

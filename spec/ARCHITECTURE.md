@@ -1,4 +1,4 @@
-# ארכיטקטורה – Home-me V1
+# ארכיטקטורה – Homie V1
 
 מקורות: PRD.md, tech-stack.md, course-stack.md, product-10-definitions.md.
 מספרי הפיצ'רים (F01–F41) הם המספרים מ-MVP.md.
@@ -60,7 +60,7 @@
 | date | date, not null | |
 | start_time | time, null | null = אירוע יום שלם |
 | end_time | time, null | |
-| source | text, not null | `home_me` או `google` |
+| source | text, not null | `homie` או `google` |
 | status | text, not null, default `approved` | `pending`, `approved` או `dismissed`. אירוע פנימי נוצר `approved`. אירוע Google נוצר `pending`. `dismissed` = הורה התעלם (F43). השורה נשארת בטבלה כדי ש-W1 לא יקלוט אותה שוב |
 | assigned_member_ids | jsonb, not null, default `[]` | מערך של מזהי בני בית מ-members.json |
 | google_event_id | text, null, **unique** | מניעת כפילות. null באירוע פנימי (Postgres מתיר כמה null) |
@@ -169,11 +169,11 @@ RLS מופעל על שלוש הטבלאות. אין Policy למשתמש אנונ
 
 | טבלה | שני ההורים (`auth.uid()` ברשימה) | כל משתמש אחר / anon |
 |---|---|---|
-| events | select, insert, update, delete (רק כש-`source = 'home_me'`) | אין |
+| events | select, insert, update, delete (רק כש-`source = 'homie'`) | אין |
 | tasks | select, insert, update, delete | אין |
 | shopping_items | select, insert, update, delete | אין |
 
-מחיקת משימה (F44) ומחיקת אירוע פנימי (F45) הן `delete` רגיל לפי `id`. ה-Policy של `delete` ב-`events` כוללת גם את התנאי `source = 'home_me'`, כדי שאירוע Google לא יימחק (מחיקה שלו הייתה גורמת ל-W1 לקלוט אותו שוב). מחיקה מקבילה של אותו פריט על ידי שני ההורים לא דורשת עדכון מותנה: השנייה פשוט לא מוחקת דבר.
+מחיקת משימה (F44) ומחיקת אירוע פנימי (F45) הן `delete` רגיל לפי `id`. ה-Policy של `delete` ב-`events` כוללת גם את התנאי `source = 'homie'`, כדי שאירוע Google לא יימחק (מחיקה שלו הייתה גורמת ל-W1 לקלוט אותו שוב). מחיקה מקבילה של אותו פריט על ידי שני ההורים לא דורשת עדכון מותנה: השנייה פשוט לא מוחקת דבר.
 
 ### עדכון מותנה
 course-stack.md דורש עדכון מותנה כשפעולה יכולה להתבצע על ידי שני משתמשים בו-זמנית. לכן בפעולות אישור ודחייה:
@@ -203,7 +203,7 @@ course-stack.md דורש עדכון מותנה כשפעולה יכולה להת�
 **הפרומפט המרכזי** (מועתק מילה במילה מסעיף 10 ב-product-10-definitions.md; זה הנוסח הקובע, ואין לשנות אותו בלי אישור):
 
 ```
-You are the AI suggestion layer of Home-me, a family responsibility management system. You receive an approved or newly imported family event. Suggest one short, practical preparation task that could help the family get ready for the event. The suggestion must be directly related to the event context and should add useful information that is not already written in the event. Do not create, edit, assign or complete anything automatically. Return only a proposed task for parent approval. Do not invent personal facts about the family beyond the provided event data.
+You are the AI suggestion layer of Homie, a family responsibility management system. You receive an approved or newly imported family event. Suggest one short, practical preparation task that could help the family get ready for the event. The suggestion must be directly related to the event context and should add useful information that is not already written in the event. Do not create, edit, assign or complete anything automatically. Return only a proposed task for parent approval. Do not invent personal facts about the family beyond the provided event data.
 ```
 
 **מה נשלח למודל** (שדה `input`):

@@ -32,7 +32,11 @@
         <p class="daybar__date" aria-live="polite"></p>
         <button type="button" class="icon-btn" data-day="next"></button>
         <button type="button" class="btn btn--secondary btn--small daybar__today" hidden></button>
-        <button type="button" class="icon-btn daybar__refresh" data-refresh></button>
+        <!-- Phone only; on desktop both live in the top bar (ADR-7, ADR-16) -->
+        <div class="daybar__sync">
+          <span class="last-updated daybar__updated" data-last-updated hidden></span>
+          <button type="button" class="icon-btn daybar__refresh" data-refresh></button>
+        </div>
       </div>
 
       <div class="board__alerts"></div>

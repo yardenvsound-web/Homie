@@ -6,7 +6,7 @@ import { renderMemberPicker } from './members.js';
 import { createTask, updateTask, deleteTask } from './data/tasks.js';
 import { formatTime } from './time.js';
 import {
-  MESSAGES, STATUS_LABELS, LIMITS, icon, createModal, confirmDialog, createField, fieldRow,
+  MESSAGES, STATUS_LABELS, LIMITS, createModal, addDeleteButton, createField, fieldRow,
 } from './ui.js';
 
 // task: existing task row (edit) or null (create). date: prefilled date for a new task.
@@ -107,36 +107,10 @@ export function openTaskModal({ task = null, date, opener, fallbackFocus, onSave
   modal.body.append(title.wrap, fieldRow(dateField, time), picker.el, status.wrap, notes.wrap);
 
   if (editing) {
-    // Text button on the far side of the footer, away from "save" (DESIGN.md, F44).
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.className = 'btn btn--danger-text modal__delete';
-    del.dataset.modalExtra = '';
-    del.append(icon('trash'));
-    const label = document.createElement('span');
-    label.textContent = MESSAGES.delete;
-    del.append(label);
-    modal.footer.append(del);
-
-    del.addEventListener('click', async () => {
-      const ok = await confirmDialog({
-        message: MESSAGES.confirmDeleteTask,
-        confirmLabel: MESSAGES.delete,
-        returnFocus: del,
-      });
-      if (!ok) return;
-      modal.setBusy(true, MESSAGES.saveChanges); // keeps the primary label unchanged
-      try {
-        await deleteTask(task.id); // already gone = same result: it is off the board
-        modal.setBusy(false);
-        modal.close({ toFallback: true });
-        onDeleted?.();
-      } catch (err) {
-        console.error('Task delete failed:', err);
-        modal.setBusy(false);
-        modal.showError(MESSAGES.deleteFailed);
-        del.focus();
-      }
+    addDeleteButton(modal, {
+      confirmMessage: MESSAGES.confirmDeleteTask,
+      onDelete: () => deleteTask(task.id),
+      onDeleted,
     });
   }
 

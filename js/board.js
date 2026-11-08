@@ -1,8 +1,8 @@
 // Daily board (index.html): untimed items + hourly Timeline.
 // F04, F05, F06, F07, F09, F42 (day arrows), F47 (refresh), F41 (Last Write Wins),
-// F12/F14/F44 (task modal), F18 (event modal) through the add menu.
-// Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): event editing, faded done
-// tasks and "last updated" (M7), overlap chip (M8).
+// F12/F14/F44 (task modal), F18 (event modal) through the add menu,
+// F08 (faded done task), F11 ("last updated"), F19/F45 (edit / delete an internal event).
+// Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): overlap chip (M8).
 
 import { initProtectedPage, refreshPendingCount } from './nav.js';
 import { getMembers, renderAvatar } from './members.js';
@@ -10,7 +10,10 @@ import { getBoardTasks, setTaskStatus } from './data/tasks.js';
 import { getBoardEvents } from './data/events.js';
 import { todayISO, addDays, formatDayLabel, formatTime, minutesOf } from './time.js';
 import { TIMELINE_START_HOUR, TIMELINE_END_HOUR } from './config.js';
-import { MESSAGES, STATUS_LABELS, SOURCE_TAGS, icon, showError, clearError } from './ui.js';
+import {
+  MESSAGES, STATUS_LABELS, SOURCE_TAGS, icon, showError, clearError,
+  markLoading, markLoaded, markFailed, lastUpdatedDetail,
+} from './ui.js';
 import { openTaskModal } from './task-modal.js';
 import { openEventModal } from './event-modal.js';
 
@@ -37,8 +40,9 @@ const el = {
 // In memory only: a page reload always opens on today (F42, ARCHITECTURE.md section 8).
 let selectedDate = todayISO();
 let loadSeq = 0;
-// Edited task whose card gets focus back once the board has re-rendered.
-let focusTaskId = null;
+// Edited item whose card gets focus back once the board has re-rendered (ADR-8).
+// { kind: 'task' | 'event', id }
+let focusItem = null;
 
 // ---------- Members and colors (DESIGN.md "כללי צבע לפי מספר המשויכים") ----------
 
@@ -113,7 +117,8 @@ function renderTaskCard(task) {
   const open = document.createElement('button');
   open.type = 'button';
   open.className = 'item-card__open';
-  open.dataset.taskId = task.id;
+  open.dataset.kind = 'task';
+  open.dataset.id = task.id;
   open.textContent = task.title;
   open.setAttribute('aria-label', MESSAGES.editTask(task.title));
   open.addEventListener('click', () => openTaskEditor(task, open));
@@ -128,6 +133,7 @@ function renderTaskCard(task) {
 
   function show(status) {
     checkbox.checked = status === 'done';
+    li.classList.toggle('item-card--done', status === 'done'); // F08
     checkbox.setAttribute('aria-label', status === 'done' ? MESSAGES.markTodo(task.title) : MESSAGES.markDone(task.title));
     const next = statusChip(status);
     chip.replaceWith(next);
@@ -189,7 +195,22 @@ function renderEventCard(event) {
   body.className = 'item-card__body';
   const title = document.createElement('h3');
   title.className = 'item-card__title';
-  title.textContent = event.title;
+  if (event.source === 'homie') {
+    // Internal event: the title button covers the card and opens the editor (F19).
+    // A Google event is never edited in Homie, so its card is not clickable.
+    li.classList.add('item-card--clickable');
+    const open = document.createElement('button');
+    open.type = 'button';
+    open.className = 'item-card__open';
+    open.dataset.kind = 'event';
+    open.dataset.id = event.id;
+    open.textContent = event.title;
+    open.setAttribute('aria-label', MESSAGES.editEvent(event.title));
+    open.addEventListener('click', () => openEventEditor(event, open));
+    title.append(open);
+  } else {
+    title.textContent = event.title;
+  }
   const meta = document.createElement('p');
   meta.className = 'item-card__meta';
   meta.append(timeMeta(eventTimeText(event)), renderAssignees(members));
@@ -294,10 +315,11 @@ function renderBoard(tasks, events) {
   else el.timelineList.replaceChildren();
   el.timeline.hidden = timed.length === 0;
 
-  if (focusTaskId) {
-    const target = document.querySelector(`.item-card__open[data-task-id="${focusTaskId}"]`);
+  if (focusItem) {
+    const target = [...document.querySelectorAll('.item-card__open')]
+      .find((b) => b.dataset.kind === focusItem.kind && b.dataset.id === focusItem.id);
     (target ?? visibleToggle()).focus();
-    focusTaskId = null;
+    focusItem = null;
   }
 
   el.emptyText.textContent = selectedDate === todayISO() ? MESSAGES.emptyToday : MESSAGES.emptyOtherDay;
@@ -326,6 +348,7 @@ async function loadDay({ keep = false } = {}) {
   const date = selectedDate;
   clearError(el.alerts);
   setBusy(true);
+  markLoading();
   if (!keep) {
     clearBoard();
     el.skeleton.hidden = false;
@@ -335,10 +358,12 @@ async function loadDay({ keep = false } = {}) {
     const [tasks, events] = await Promise.all([getBoardTasks(date), getBoardEvents(date)]);
     if (seq !== loadSeq) return; // a newer request (e.g. another arrow click) won
     renderBoard(tasks, events);
+    markLoaded();
   } catch (err) {
     if (seq !== loadSeq) return;
     console.error('Board load failed:', err);
-    showError(el.alerts, MESSAGES.boardLoadFailed, () => loadDay({ keep: true }));
+    markFailed();
+    showError(el.alerts, MESSAGES.boardLoadFailed, () => loadDay({ keep: true }), lastUpdatedDetail());
   } finally {
     if (seq === loadSeq) {
       el.skeleton.hidden = true;
@@ -400,9 +425,9 @@ function afterSave(date) {
   else goTo(date);
 }
 
-function afterGone() {
+function afterGone(message = MESSAGES.taskGone) {
   loadDay({ keep: true }); // clears old alerts synchronously, so show the message after
-  showError(el.alerts, MESSAGES.taskGone, () => loadDay({ keep: true }));
+  showError(el.alerts, message, () => loadDay({ keep: true }));
 }
 
 function openTaskEditor(task, opener) {
@@ -411,11 +436,25 @@ function openTaskEditor(task, opener) {
     opener,
     fallbackFocus: visibleToggle(),
     onSaved: (date) => {
-      focusTaskId = task.id;
+      focusItem = { kind: 'task', id: task.id };
       afterSave(date);
     },
     onDeleted: () => loadDay({ keep: true }),
-    onGone: afterGone,
+    onGone: () => afterGone(),
+  });
+}
+
+function openEventEditor(event, opener) {
+  openEventModal({
+    event,
+    opener,
+    fallbackFocus: visibleToggle(),
+    onSaved: (date) => {
+      focusItem = { kind: 'event', id: event.id };
+      afterSave(date);
+    },
+    onDeleted: () => loadDay({ keep: true }),
+    onGone: () => afterGone(MESSAGES.eventGone),
   });
 }
 

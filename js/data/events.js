@@ -2,7 +2,8 @@
 
 import { db } from '../supabase.js';
 
-const BOARD_FIELDS = 'id, title, date, start_time, end_time, source, assigned_member_ids, created_at';
+// `notes` is included so the edit modal opens filled without another query.
+const BOARD_FIELDS = 'id, title, date, start_time, end_time, source, assigned_member_ids, notes, created_at';
 
 // Events shown on the daily board: approved only (pending / dismissed Google
 // events never reach the board).
@@ -27,6 +28,33 @@ export async function createEvent(fields) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Edit an internal event (F19). Last Write Wins (F41): no condition on the old
+// value. Only Homie events are edited here; Google data is read-only.
+// Resolves { found: false } when the row no longer exists.
+export async function updateEvent(id, fields) {
+  const { data, error } = await db
+    .from('events')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('source', 'homie')
+    .select('id');
+  if (error) throw error;
+  return { found: data.length > 0 };
+}
+
+// Delete an internal event (F45). RLS also allows delete only for source = 'homie'.
+// Resolves { found: false } when nothing was deleted (already gone).
+export async function deleteEvent(id) {
+  const { data, error } = await db
+    .from('events')
+    .delete()
+    .eq('id', id)
+    .eq('source', 'homie')
+    .select('id');
+  if (error) throw error;
+  return { found: data.length > 0 };
 }
 
 // ---------- Pending Google events (F28, F29, F43) ----------

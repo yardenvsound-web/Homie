@@ -1,19 +1,25 @@
-// Internal event modal (F18, F20): create only in Milestone 4.
-// Google approve-and-assign modal (F29): Milestone 6.
-// Editing and deleting internal events (F19, F45) come in Milestone 7.
+// Internal event modal: create (F18, F20), edit (F19) and delete (F45).
+// Google approve-and-assign modal (F29).
 
 import { renderMemberPicker } from './members.js';
-import { createEvent, approveGoogleEvent } from './data/events.js';
+import { createEvent, updateEvent, deleteEvent, approveGoogleEvent } from './data/events.js';
 import { formatTime } from './time.js';
-import { MESSAGES, LIMITS, icon, createModal, createField, fieldRow } from './ui.js';
+import { MESSAGES, LIMITS, icon, createModal, addDeleteButton, createField, fieldRow } from './ui.js';
 
-// date: prefilled date. onSaved(date) runs after a successful save.
-export function openEventModal({ date, opener, fallbackFocus, onSaved }) {
+// event: existing internal event (edit) or null (create). date: prefilled date
+// for a new event. Callbacks: onSaved(date) after save, onDeleted() after delete,
+// onGone() when the event was already deleted by the other parent.
+export function openEventModal({ event = null, date, opener, fallbackFocus, onSaved, onDeleted, onGone }) {
+  const editing = Boolean(event);
   const title = createField({ id: 'event-title', label: MESSAGES.eventTitleLabel, maxLength: LIMITS.title });
   const dateField = createField({ id: 'event-date', label: MESSAGES.dateLabel, type: 'date' });
   const start = createField({ id: 'event-start', label: MESSAGES.startTimeLabel, type: 'time' });
   const end = createField({ id: 'event-end', label: MESSAGES.endTimeLabel, type: 'time' });
-  const picker = renderMemberPicker({ id: 'event-members', legend: MESSAGES.participantsLabel });
+  const picker = renderMemberPicker({
+    id: 'event-members',
+    legend: MESSAGES.participantsLabel,
+    selectedIds: event?.assigned_member_ids ?? [],
+  });
   const notes = createField({
     id: 'event-notes',
     label: MESSAGES.notesLabel,
@@ -21,7 +27,11 @@ export function openEventModal({ date, opener, fallbackFocus, onSaved }) {
     maxLength: LIMITS.notes,
     placeholder: MESSAGES.notesPlaceholder,
   });
-  dateField.input.value = date;
+  title.input.value = event?.title ?? '';
+  dateField.input.value = event?.date ?? date;
+  start.input.value = formatTime(event?.start_time ?? '');
+  end.input.value = formatTime(event?.end_time ?? '');
+  notes.input.value = event?.notes ?? '';
 
   // Changing the start time can fix the end-time error, so clear it too.
   start.input.addEventListener('input', () => end.setError(null));
@@ -62,8 +72,8 @@ export function openEventModal({ date, opener, fallbackFocus, onSaved }) {
   }
 
   const modal = createModal({
-    title: MESSAGES.newEventTitle,
-    primaryLabel: MESSAGES.save,
+    title: editing ? MESSAGES.editEventTitle : MESSAGES.newEventTitle,
+    primaryLabel: editing ? MESSAGES.saveChanges : MESSAGES.save,
     opener,
     fallbackFocus,
     async onSubmit() {
@@ -71,7 +81,17 @@ export function openEventModal({ date, opener, fallbackFocus, onSaved }) {
       if (!values) return false;
       modal.setBusy(true);
       try {
-        await createEvent(values);
+        if (editing) {
+          const { found } = await updateEvent(event.id, values);
+          if (!found) {
+            modal.setBusy(false);
+            modal.close({ toFallback: true });
+            onGone?.();
+            return false;
+          }
+        } else {
+          await createEvent(values);
+        }
         modal.setBusy(false);
         onSaved?.(values.date);
         return true;
@@ -85,6 +105,15 @@ export function openEventModal({ date, opener, fallbackFocus, onSaved }) {
   });
 
   modal.body.append(title.wrap, dateField.wrap, fieldRow(start, end), picker.el, notes.wrap);
+
+  if (editing) {
+    addDeleteButton(modal, {
+      confirmMessage: MESSAGES.confirmDeleteEvent,
+      onDelete: () => deleteEvent(event.id),
+      onDeleted,
+    });
+  }
+
   modal.open(title.input);
 }
 

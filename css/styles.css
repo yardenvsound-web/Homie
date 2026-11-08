@@ -505,6 +505,28 @@ body:has(.topbar) .page .screen-title {
   color: var(--color-danger-text);
 }
 
+.error-bar__detail {
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- "Last updated" (F11) ---------- */
+
+.last-updated {
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.last-updated[hidden] {
+  display: none;
+}
+
+/* Desktop / tablet only, next to the top bar refresh button */
+.topbar__updated {
+  display: none;
+}
+
 /* ---------- Icon button ---------- */
 
 .icon-btn {
@@ -541,8 +563,9 @@ body:has(.topbar) .page .screen-title {
 
 .daybar {
   display: flex;
+  flex-wrap: wrap; /* phone: "עודכן לאחרונה" + refresh wrap when "היום" is shown */
   align-items: center;
-  gap: var(--space-1);
+  gap: 0 var(--space-1);
   margin-inline: calc(var(--space-2) * -1);
 }
 
@@ -551,7 +574,11 @@ body:has(.topbar) .page .screen-title {
   white-space: nowrap;
 }
 
-.daybar__refresh {
+/* "עודכן לאחרונה" + refresh stay together and wrap as one group */
+.daybar__sync {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-inline-start: auto;
 }
 
@@ -857,7 +884,8 @@ body:has(.topbar) .page .screen-title {
 
 /* ---------- Clickable task card (opens the edit modal) ---------- */
 
-.item-card--task {
+.item-card--task,
+.item-card--clickable {
   position: relative;
 }
 
@@ -883,12 +911,35 @@ body:has(.topbar) .page .screen-title {
   box-shadow: none;
 }
 
-.item-card--task:has(.item-card__open:focus-visible) {
+.item-card--task:has(.item-card__open:focus-visible),
+.item-card--clickable:has(.item-card__open:focus-visible) {
   box-shadow: var(--focus-ring);
 }
 
-.item-card--task:hover {
+.item-card--task:hover,
+.item-card--clickable:hover {
   border-color: var(--color-border-field);
+}
+
+/* Event card: the stripe edge keeps its member color on hover */
+.item-card--clickable:hover {
+  border-inline-start-color: var(--card-stripe, var(--color-border-field));
+}
+
+/* Done task (F08): faded background, struck-through title, muted text.
+   The checked box and the "הושלמה" chip still carry the state in words. */
+.item-card--done {
+  background: var(--color-bg-done);
+}
+
+.item-card--done .item-card__title,
+.item-card--done .item-card__open {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.item-card--done .item-card__meta {
+  color: var(--color-text-muted);
 }
 
 /* The checkbox sits above the card button */
@@ -1186,6 +1237,7 @@ body:has(.topbar) .page .screen-title {
 .shopping__head {
   display: flex;
   align-items: center;
+  gap: var(--space-1);
   justify-content: flex-end;
   margin-inline-end: calc(var(--space-2) * -1);
   margin-block: calc(var(--space-2) * -1);
@@ -1274,20 +1326,141 @@ body:has(.topbar) .page .screen-title {
   overflow-wrap: anywhere;
 }
 
-/* Quantity: display only until F25 (Milestone 7) — a box, not a field */
+/* Quantity box (F25): a small number field */
 .shop-item__qty {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--size-touch-target);
-  height: var(--space-5);
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-s);
-  background: var(--color-bg-done);
+  width: calc(var(--space-6) + var(--space-3)); /* 64 */
+  height: var(--size-touch-target);
+  padding: 0 var(--space-1);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
   color: var(--color-text);
   font: var(--font-label);
+  font-family: var(--font-family);
+  text-align: center;
   flex-shrink: 0;
+}
+
+.shop-item__qty:focus-visible {
+  outline: none;
+  border: var(--focus-field-border);
+  box-shadow: var(--focus-field-halo);
+}
+
+.shop-item__qty[aria-invalid='true'] {
+  border: 2px solid var(--color-danger);
+}
+
+.shop-item {
+  flex-wrap: wrap;
+}
+
+/* Error under the row, aligned with the product name */
+.shop-item__error {
+  flex-basis: 100%;
+  margin: 0;
+  padding-inline-start: calc(var(--size-touch-target) + var(--space-2));
+  padding-bottom: var(--space-1);
+}
+
+.shop-item__error[hidden] {
+  display: none;
+}
+
+.shop-item__delete {
+  margin-inline-end: calc(var(--space-2) * -1);
+}
+
+/* ---------- Duplicate warning (F26) ---------- */
+
+.field__input--warning {
+  border: 2px solid var(--color-mustard);
+}
+
+.dup-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-butter);
+  border-radius: var(--radius-m);
+}
+
+.dup-alert__text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font: var(--font-body);
+  color: var(--color-text);
+}
+
+.dup-alert__text .icon {
+  flex-shrink: 0;
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.dup-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- Toast (F46) ---------- */
+
+/* Phone: above the bottom bar; wider: bottom of the screen */
+.toast-region {
+  position: fixed;
+  inset-inline: var(--space-3);
+  bottom: calc(var(--size-touch-target) + var(--space-5) + var(--space-3) + env(safe-area-inset-bottom));
+  z-index: 12;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: calc(var(--space-6) * 10); /* 480 */
+  width: 100%;
+  min-height: var(--size-touch-target);
+  padding: var(--space-1) var(--space-3);
+  padding-inline-end: var(--space-1);
+  background: var(--color-text);
+  color: var(--color-surface);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-soft);
+}
+
+.toast__text {
+  flex: 1;
+  min-width: 0;
+  font: var(--font-body);
+  overflow-wrap: anywhere;
+}
+
+.toast__action {
+  flex-shrink: 0;
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-surface);
+  font: var(--font-label);
+  font-family: var(--font-family);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toast__action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-text), 0 0 0 4px var(--color-surface);
 }
 
 /* Compact empty state (DESIGN.md: pending / shopping) */
@@ -1349,6 +1522,7 @@ body:has(.topbar) .page .screen-title {
 .pending__head {
   display: flex;
   align-items: center;
+  gap: var(--space-1);
   justify-content: flex-end;
   margin-inline-end: calc(var(--space-2) * -1);
   margin-block: calc(var(--space-2) * -1);
@@ -1561,13 +1735,23 @@ body:has(.topbar) .page .screen-title {
     display: none;
   }
 
-  /* Refresh moves from the day bar to the top bar */
+  /* Refresh and "last updated" move from the page to the top bar */
   .topbar__refresh {
     display: inline-flex;
   }
 
-  .daybar__refresh {
+  .topbar__updated:not([hidden]) {
+    display: inline;
+  }
+
+  .daybar__sync,
+  .shopping__updated:not([hidden]),
+  .pending__updated:not([hidden]) {
     display: none;
+  }
+
+  .toast-region {
+    bottom: var(--space-4);
   }
 
   .card-list {

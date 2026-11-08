@@ -17,7 +17,8 @@
     <main class="page shopping">
       <div class="shopping__head">
         <h1 class="screen-title">רשימת קניות</h1>
-        <!-- Phone only; on desktop the refresh button is in the top bar (ADR-7) -->
+        <!-- Phone only; on desktop both live in the top bar (ADR-7, ADR-16) -->
+        <span class="last-updated shopping__updated" data-last-updated hidden></span>
         <button type="button" class="icon-btn shopping__refresh" data-refresh></button>
       </div>
 
@@ -55,6 +56,8 @@
         </div>
       </div>
     </main>
+    <!-- "סומן כנקנה" toast with "בטל" (F46) -->
+    <div class="toast-region" aria-live="polite"></div>
     <script type="module" src="js/shopping-page.js"></script>
   </body>
 </html>

@@ -8,7 +8,10 @@ import { initProtectedPage, setPendingCount } from './nav.js';
 import { getPendingEvents, dismissGoogleEvent } from './data/events.js';
 import { getProposedTasks, approveSuggestion, rejectSuggestion } from './data/tasks.js';
 import { formatDayLabel, formatTime } from './time.js';
-import { MESSAGES, SOURCE_TAGS, icon, showError, clearError } from './ui.js';
+import {
+  MESSAGES, SOURCE_TAGS, icon, showError, clearError,
+  markLoading, markLoaded, markFailed, lastUpdatedDetail,
+} from './ui.js';
 import { openGoogleApproveModal } from './event-modal.js';
 
 const el = {
@@ -250,6 +253,7 @@ async function loadPending({ keep = false, keepAlerts = false } = {}) {
   const seq = ++loadSeq;
   if (!keepAlerts) clearError(el.alerts);
   setBusy(true);
+  markLoading();
   if (!keep) {
     el.google.hidden = true;
     el.ai.hidden = true;
@@ -261,10 +265,12 @@ async function loadPending({ keep = false, keepAlerts = false } = {}) {
     const [events, tasks] = await Promise.all([getPendingEvents(), getProposedTasks()]);
     if (seq !== loadSeq) return; // a newer request won
     render(events, tasks);
+    markLoaded();
   } catch (err) {
     if (seq !== loadSeq) return;
     console.error('Pending load failed:', err);
-    showError(el.alerts, MESSAGES.boardLoadFailed, () => loadPending({ keep: true }));
+    markFailed();
+    showError(el.alerts, MESSAGES.boardLoadFailed, () => loadPending({ keep: true }), lastUpdatedDetail());
   } finally {
     if (seq === loadSeq) {
       el.skeleton.hidden = true;

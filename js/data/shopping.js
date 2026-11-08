@@ -15,7 +15,16 @@ export async function getActiveItems() {
   return data;
 }
 
-// Quick Add (F23). No duplicate check until F26 (Milestone 7).
+// Duplicate check for Quick Add (F26): an active item with the same name,
+// ignoring case and surrounding spaces. Checked against the database (not just
+// the screen), so an item the other parent added is found too. Returns the item or null.
+export async function findActiveByName(name) {
+  const key = name.trim().toLocaleLowerCase();
+  const items = await getActiveItems();
+  return items.find((item) => item.name.trim().toLocaleLowerCase() === key) ?? null;
+}
+
+// Quick Add (F23). The page runs findActiveByName first (F26).
 export async function addItem({ name, quantity }) {
   const { data, error } = await db
     .from('shopping_items')
@@ -26,14 +35,36 @@ export async function addItem({ name, quantity }) {
   return data;
 }
 
-// "נקנה" (F24). Last Write Wins: a plain update, no condition on the old value.
-// Resolves { found: false } when the row no longer exists.
-export async function markPurchased(id) {
+// All updates are Last Write Wins (F41): a plain update, no condition on the
+// old value. Each resolves { found: false } when the row no longer exists.
+async function updateItem(id, fields) {
   const { data, error } = await db
     .from('shopping_items')
-    .update({ purchased: true, updated_at: new Date().toISOString() })
+    .update({ ...fields, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('id');
+  if (error) throw error;
+  return { found: data.length > 0 };
+}
+
+// "נקנה" (F24).
+export function markPurchased(id) {
+  return updateItem(id, { purchased: true });
+}
+
+// "בטל" in the toast (F46): back to the active list.
+export function markUnpurchased(id) {
+  return updateItem(id, { purchased: false });
+}
+
+// Quantity box (F25) and "עדכון כמות" for a duplicate (F26).
+export function updateQuantity(id, quantity) {
+  return updateItem(id, { quantity });
+}
+
+// ✕ (F27): immediate delete, no confirmation.
+export async function deleteItem(id) {
+  const { data, error } = await db.from('shopping_items').delete().eq('id', id).select('id');
   if (error) throw error;
   return { found: data.length > 0 };
 }

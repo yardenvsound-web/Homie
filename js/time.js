@@ -46,3 +46,15 @@ export function minutesOf(time) {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
+
+const clockFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TIMEZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+// Current time in Israel, e.g. '14:32' ("עודכן לאחרונה", F11).
+export function nowTimeLabel() {
+  return clockFormatter.format(new Date());
+}

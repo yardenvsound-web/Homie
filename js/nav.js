@@ -1,15 +1,15 @@
 // Shared navigation: top bar (+ bottom bar on phone) with the signed-in parent
 // and "יציאה". Also bootstraps every protected page (session → members → nav).
 // Pending counter (F28) on the "ממתין לאישור" tab, counted on every page load.
-// Not shown yet (DESIGN.md "מה מוצג בכל שלב"): weekly calendar tab (M8),
-// "last updated" (M7).
-// The desktop refresh button appears only on pages that pass onRefresh (ADR-7).
+// Not shown yet (DESIGN.md "מה מוצג בכל שלב"): weekly calendar tab (M8).
+// The desktop refresh button and "last updated" (F11) appear only on pages that
+// pass onRefresh (ADR-7, ADR-16).
 
 import { requireSession, signOut } from './auth.js';
 import { loadMembers, findParentByUserId, renderAvatar } from './members.js';
 import { countPendingEvents } from './data/events.js';
 import { countProposedTasks } from './data/tasks.js';
-import { MESSAGES, icon, showError, clearError } from './ui.js';
+import { MESSAGES, icon, showError, clearError, renderLastUpdated } from './ui.js';
 
 const TABS = [
   { page: 'index', href: 'index.html', label: 'לוח היום', icon: 'home' },
@@ -186,10 +186,18 @@ export function renderNav({ page, title, parent = null, parentKnown = true, onRe
   brand.textContent = 'Homie';
 
   header.append(titleEl, brand, buildLinks(page, 'topnav'));
-  if (onRefresh) header.append(buildRefresh(onRefresh));
+  if (onRefresh) {
+    // Desktop / tablet: "עודכן לאחרונה" sits right before the refresh button.
+    const updated = document.createElement('span');
+    updated.className = 'last-updated topbar__updated';
+    updated.dataset.lastUpdated = '';
+    updated.hidden = true;
+    header.append(updated, buildRefresh(onRefresh));
+  }
   header.append(buildAccount(parent, parentKnown));
   document.body.prepend(header);
   document.body.append(buildLinks(page, 'bottomnav'));
+  renderLastUpdated();
 }
 
 // Bootstraps a protected page. onReady(members) runs after members load.

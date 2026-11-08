@@ -1,5 +1,7 @@
-// Shared UI helpers and Hebrew UI wording: icons, error bar, modal, confirm
-// dialog and form fields. Still to come: "last updated" (Milestone 7).
+// Shared UI helpers and Hebrew UI wording: icons, error bar, "last updated"
+// (F11), toast (F46), modal, confirm dialog, delete button and form fields.
+
+import { nowTimeLabel } from './time.js';
 
 export const MESSAGES = {
   membersLoadFailed: 'לא הצלחנו לטעון את בני הבית',
@@ -17,6 +19,8 @@ export const MESSAGES = {
   nextDay: 'היום הבא',
   today: 'היום',
   boardLoadFailed: 'לא הצלחנו לעדכן',
+  lastUpdated: (time) => `עודכן לאחרונה: ${time}`,
+  updating: 'מעדכן…',
   statusSaveFailed: 'לא הצלחנו לשמור את השינוי',
   taskGone: 'המשימה כבר לא קיימת',
   emptyToday: 'אין משימות להיום',
@@ -28,6 +32,8 @@ export const MESSAGES = {
   markDone: (title) => `סמן כהושלמה: ${title}`,
   markTodo: (title) => `סמן כלביצוע: ${title}`,
   editTask: (title) => `עריכת משימה: ${title}`,
+  editEvent: (title) => `עריכת אירוע: ${title}`,
+  eventGone: 'האירוע כבר לא קיים',
 
   // Add menu and modals (Milestone 4)
   add: 'הוספה',
@@ -35,6 +41,7 @@ export const MESSAGES = {
   newTaskTitle: 'משימה חדשה',
   editTaskTitle: 'עריכת משימה',
   newEventTitle: 'אירוע חדש',
+  editEventTitle: 'עריכת אירוע',
   save: 'שמור',
   saveChanges: 'שמירת שינויים',
   saving: 'שומר…',
@@ -42,6 +49,7 @@ export const MESSAGES = {
   close: 'סגירה',
   delete: 'מחיקה',
   confirmDeleteTask: 'למחוק את המשימה?',
+  confirmDeleteEvent: 'למחוק את האירוע?',
   saveFailed: 'לא הצלחנו לשמור',
   deleteFailed: 'לא הצלחנו למחוק',
   taskTitleLabel: 'שם המשימה',
@@ -73,6 +81,13 @@ export const MESSAGES = {
   addItemFailed: 'לא הצלחנו להוסיף את המוצר',
   quantityValue: (qty) => `כמות: ${qty}`,
   markPurchased: (name, qty) => (qty > 1 ? `סמן כנקנה: ${name}, ${qty}` : `סמן כנקנה: ${name}`),
+  quantityOf: (name) => `כמות: ${name}`,
+  deleteItem: (name) => `מחיקה: ${name}`,
+  duplicateItem: (name, qty) => `${name} כבר ברשימה, כמות ${qty}`,
+  updateQuantity: 'עדכון כמות',
+  purchasedToast: (name) => `סומן כנקנה: ${name}`,
+  undo: 'בטל',
+  undoFailed: 'לא הצלחנו לבטל',
 
   // Pending (Milestone 6)
   pendingTitle: 'ממתין לאישור',
@@ -150,8 +165,45 @@ export function icon(name) {
   return svg;
 }
 
+// ---------- "Last updated" (F11, ARCHITECTURE.md section 5) ----------
+
+// Time of the last successful load of this page's data. In memory only.
+let lastLoadedAt = null;
+
+function setLastUpdatedText(text) {
+  for (const node of document.querySelectorAll('[data-last-updated]')) {
+    node.textContent = text ?? '';
+    node.hidden = !text;
+  }
+}
+
+// Re-applies the current state (e.g. after the top bar was rebuilt).
+export function renderLastUpdated() {
+  setLastUpdatedText(lastLoadedAt ? MESSAGES.lastUpdated(lastLoadedAt) : null);
+}
+
+export function markLoading() {
+  setLastUpdatedText(MESSAGES.updating);
+}
+
+export function markLoaded() {
+  lastLoadedAt = nowTimeLabel();
+  renderLastUpdated();
+}
+
+// A failed load keeps the previous time.
+export function markFailed() {
+  renderLastUpdated();
+}
+
+// Extra line for a load-error bar: the last successful time, if there is one.
+export function lastUpdatedDetail() {
+  return lastLoadedAt ? MESSAGES.lastUpdated(lastLoadedAt) : null;
+}
+
 // Error bar at the top of the content, with a "try again" button.
-export function showError(container, message, onRetry) {
+// detail (optional): a second, quieter line (e.g. "עודכן לאחרונה: 14:32").
+export function showError(container, message, onRetry, detail = null) {
   clearError(container);
   const bar = document.createElement('div');
   bar.className = 'error-bar';
@@ -163,6 +215,12 @@ export function showError(container, message, onRetry) {
   const span = document.createElement('span');
   span.textContent = message;
   text.append(span);
+  if (detail) {
+    const extra = document.createElement('span');
+    extra.className = 'error-bar__detail';
+    extra.textContent = ` · ${detail}`;
+    span.append(extra);
+  }
 
   const button = document.createElement('button');
   button.type = 'button';
@@ -180,6 +238,65 @@ export function showError(container, message, onRetry) {
 
 export function clearError(container) {
   container.querySelector(':scope > .error-bar')?.remove();
+}
+
+// ---------- Toast (F46) ----------
+
+let activeToast = null;
+
+// One toast at a time: a new one replaces the previous (whose action is lost).
+// The timer pauses while the pointer is over it or focus is inside, so a
+// keyboard user has time to reach the action. region: an aria-live container.
+export function showToast({ region, message, actionLabel, onAction, duration = 5000 }) {
+  activeToast?.dismiss();
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  const text = document.createElement('span');
+  text.className = 'toast__text';
+  text.textContent = message;
+  const action = document.createElement('button');
+  action.type = 'button';
+  action.className = 'toast__action';
+  action.textContent = actionLabel;
+  toast.append(text, action);
+
+  let timer = null;
+  let hovered = false;
+  let focused = false;
+  const start = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => api.dismiss(), duration);
+  };
+  const pause = () => clearTimeout(timer);
+  const resumeIfIdle = () => {
+    if (!hovered && !focused) start();
+  };
+
+  const api = {
+    dismiss() {
+      clearTimeout(timer);
+      // If focus was on the toast, keep it on the page.
+      const hadFocus = toast.contains(document.activeElement);
+      toast.remove();
+      if (activeToast === api) activeToast = null;
+      return hadFocus;
+    },
+  };
+
+  toast.addEventListener('mouseenter', () => { hovered = true; pause(); });
+  toast.addEventListener('mouseleave', () => { hovered = false; resumeIfIdle(); });
+  toast.addEventListener('focusin', () => { focused = true; pause(); });
+  toast.addEventListener('focusout', () => { focused = false; resumeIfIdle(); });
+  action.addEventListener('click', () => {
+    api.dismiss();
+    onAction();
+  });
+
+  region.append(toast);
+  activeToast = api;
+  start();
+  return api;
 }
 
 // ---------- Modal (DESIGN.md "חלון (Modal)", ADR-8) ----------
@@ -363,6 +480,43 @@ export function confirmDialog({ message, confirmLabel, returnFocus = null }) {
     dialog.showModal();
     cancel.focus();
   });
+}
+
+// "מחיקה" text button for an edit modal's footer, on the far side from "save"
+// (DESIGN.md, F44 / F45). After confirmation: await onDelete() (the database
+// call), then the modal closes (focus to its fallback) and onDeleted() runs.
+export function addDeleteButton(modal, { confirmMessage, onDelete, onDeleted }) {
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'btn btn--danger-text modal__delete';
+  del.dataset.modalExtra = '';
+  del.append(icon('trash'));
+  const label = document.createElement('span');
+  label.textContent = MESSAGES.delete;
+  del.append(label);
+  modal.footer.append(del);
+
+  del.addEventListener('click', async () => {
+    const ok = await confirmDialog({
+      message: confirmMessage,
+      confirmLabel: MESSAGES.delete,
+      returnFocus: del,
+    });
+    if (!ok) return;
+    modal.setBusy(true, MESSAGES.saveChanges); // keeps the primary label unchanged
+    try {
+      await onDelete(); // already gone = same result: it is off the board
+      modal.setBusy(false);
+      modal.close({ toFallback: true });
+      onDeleted?.();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      modal.setBusy(false);
+      modal.showError(MESSAGES.deleteFailed);
+      del.focus();
+    }
+  });
+  return del;
 }
 
 // ---------- Form fields (DESIGN.md "שדה") ----------

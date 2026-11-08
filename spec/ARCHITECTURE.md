@@ -76,7 +76,7 @@
 | title | text, not null | |
 | date | date, not null | |
 | time | time, null | null = משימה ללא שעה |
-| status | text, not null, default `לביצוע` | `לביצוע` או `הושלמה` (ערכים כפי שב-PRD) |
+| status | text, not null, default `todo` | `todo` או `done`. **החלטה:** קוד באנגלית במסד, ותווית בעברית בממשק: `todo` = "לביצוע", `done` = "הושלמה". המיפוי מרוכז ב-`js/ui.js`. כך אין עברית בתנאי `check` ובשאילתות |
 | assigned_member_ids | jsonb, not null, default `[]` | |
 | notes | text, null | |
 | reminder_at | timestamptz, null | **החלטה:** שדה אחד במקום `reminder_at` ו-`reminder_offset`. הממשק מחשב את הזמן המוחלט |
@@ -228,7 +228,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 | title | `title` מהמודל |
 | date | `date` של האירוע |
 | time | null |
-| status | `לביצוע` |
+| status | `todo` |
 | assigned_member_ids | `[]` |
 | notes | `הצעה לאירוע: {כותרת האירוע}` |
 | source | `ai` |
@@ -276,7 +276,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 
 **W2 – עדכון אירוע מ-Google (אחרי MVP, F32):** כמו W1, אבל לאירוע קיים: עדכון `title`, `date`, `start_time`, `end_time`, `notes` ו-`updated_from_google = true`. הסטטוס לא משתנה. הממשק מציג "עודכן ב-Google".
 
-**W3 – מייל תזכורת למשימה (אחרי MVP, F34):** Schedule כל שעה. **החלטה:** שעה ולא 5 דקות, כדי להישאר במכסת ההרצות החודשית (tech-stack.md). שליפת משימות עם `reminder_at` שעבר, `reminder_sent = false` ו-`status = לביצוע`, שליחת מייל בצומת Gmail, ועדכון `reminder_sent = true`. הדיוק הוא שעה.
+**W3 – מייל תזכורת למשימה (אחרי MVP, F34):** Schedule כל שעה. **החלטה:** שעה ולא 5 דקות, כדי להישאר במכסת ההרצות החודשית (tech-stack.md). שליפת משימות עם `reminder_at` שעבר, `reminder_sent = false` ו-`status = 'todo'`, שליחת מייל בצומת Gmail, ועדכון `reminder_sent = true`. הדיוק הוא שעה.
 
 **W4 – מייל על אירוע Google חדש (אחרי MVP, Could, F35):** נקרא בסוף W1 אחרי הכנסה של אירוע חדש. שולח מייל לשני ההורים. כתובות המייל נשמרות בהגדרות ה-Workflow ב-n8n, לא בריפו.
 
@@ -382,7 +382,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 
 **מעבר בין ימים (F42):** `board.js` מחזיק את היום הנבחר במשתנה בזיכרון בלבד (לא ב-localStorage ולא בכתובת), ומתחיל אותו בהיום לפי `time.js`. חץ מזיז אותו ביום אחד ושולף מחדש. "היום" מחזיר אותו להיום. רענון הדף חוזר להיום. **החלטה:** בלי פרמטר בכתובת, כדי להישאר פשוט.
 
-**יצירת משימה:** כפתור + פותח `task-modal.js` ← בדיקת קלט (כותרת חובה, תאריך חובה) ← `tasks.insert` ← רענון הלוח. משימה חדשה: `status = לביצוע`, `proposal_status = none`, `source = manual`.
+**יצירת משימה:** כפתור + פותח `task-modal.js` ← בדיקת קלט (כותרת חובה, תאריך חובה) ← `tasks.insert` ← רענון הלוח. משימה חדשה: `status = todo`, `proposal_status = none`, `source = manual`.
 
 **מחיקת משימה או אירוע פנימי:** "מחיקה" בחלון העריכה ← אישור קצר ← `tasks.delete` או `events.delete` לפי `id` ← סגירת החלון ורענון הלוח.
 

@@ -242,7 +242,7 @@ Google Calendar לקריאה בלבד. אין כתיבה, סנכרון דו-כי
 שלוש טבלאות ב-Supabase וקובץ אחד בריפו. שמות טבלאות ושדות באנגלית, אותיות קטנות עם קו תחתון.
 
 - **events:** id, title, date, start_time, end_time, source (`home_me` / `google`), status (`pending` / `approved` / `dismissed`), assigned_member_ids (JSON), google_event_id, updated_from_google, notes, created_at, updated_at.
-- **tasks:** id, title, date, time, status (`לביצוע` / `הושלמה`), assigned_member_ids (JSON), notes, reminder_at / reminder_offset, recurrence_type (`none` / `daily` / `weekly`), source (`manual` / `ai`), proposal_status (`none` / `proposed` / `approved` / `rejected`), created_at, updated_at.
+- **tasks:** id, title, date, time, status (`todo` / `done`, מוצגים בממשק "לביצוע" / "הושלמה"), assigned_member_ids (JSON), notes, reminder_at / reminder_offset, recurrence_type (`none` / `daily` / `weekly`), source (`manual` / `ai`), proposal_status (`none` / `proposed` / `approved` / `rejected`), created_at, updated_at.
 - **shopping_items:** id, name, quantity, purchased, created_at, updated_at.
 - **members.json:** בני הבית הקבועים.
 
@@ -371,7 +371,7 @@ F10 חפיפות, F17 ו-F34 תזכורת במייל, F32 עדכון מ-Google, 
 1. מחיקה ב-Google: לא מטפלים ב-V1. האירוע נשאר בלוח (מגבלה ידועה).
 2. משימה חוזרת: 4 שבועות קדימה.
 3. "עודכן לאחרונה": זמן הטעינה או הרענון האחרון מ-Supabase.
-4. סטטוס משימה: "לביצוע" ו"הושלמה".
+4. סטטוס משימה: "לביצוע" ו"הושלמה" (במסד: `todo` ו-`done`, 8.11.2026).
 5. מדדי הצלחה: קריטריוני קבלה להדגמה.
 6. פרסונות: הורה מנהל וההורה השני, והילד כפרופיל בלבד.
 7. מעבר בין ימים בלוח (F42) נכנס ל-Must (7.11.2026): בלי יומן שבועי ב-MVP, משימה לתאריך אחר מהיום לא הייתה נראית עד אותו יום.

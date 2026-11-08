@@ -1,0 +1,362 @@
+{
+  "name": "Homie W1 – Google to Pending + AI",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      },
+      "id": "8d3f2cba-15d0-55f4-b916-f610f684033b",
+      "name": "Every 4 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c34b641f-929b-5caa-b7d7-59a9f989462a",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0a247ea-17d6-5bf8-9dc5-43fa6ab3be3a",
+              "name": "model",
+              "value": "gemini-3.5-flash-lite",
+              "type": "string"
+            },
+            {
+              "id": "08bffbfa-0bcc-57ef-a023-0fc4f070ccbd",
+              "name": "supabase_url",
+              "value": "https://irmbzkhlklgrzepgskmd.supabase.co",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28d5efd8-4116-5a57-b0a1-00066a390e95",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        300
+      ],
+      "notes": "The model name lives here only (ARCHITECTURE.md section 4)."
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $now.setZone('Asia/Jerusalem').startOf('day').toISO() }}",
+        "timeMax": "={{ $now.setZone('Asia/Jerusalem').startOf('day').plus({ days: 30 }).toISO() }}",
+        "options": {
+          "singleEvents": true
+        }
+      },
+      "id": "49670113-3616-5c33-8749-6ca928319da1",
+      "name": "Google Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        660,
+        300
+      ],
+      "alwaysOutputData": false,
+      "notes": "Read only. Today + 30 days (ARCHITECTURE.md section 5). After import: Calendar -> From list -> the demo calendar (not a personal one)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Google event -> row for the `events` table (Israel time, ARCHITECTURE.md section 2).\n// All-day events: date only, both times null. Multi-day events: start day only.\nconst ZONE = 'Asia/Jerusalem';\nconst rows = [];\nfor (const item of $input.all()) {\n  const e = item.json;\n  if (!e.id || e.status === 'cancelled') continue;\n\n  let date = null;\n  let start_time = null;\n  let end_time = null;\n  if (e.start && e.start.dateTime) {\n    const start = DateTime.fromISO(e.start.dateTime, { setZone: true }).setZone(ZONE);\n    date = start.toISODate();\n    start_time = start.toFormat('HH:mm');\n    if (e.end && e.end.dateTime) {\n      end_time = DateTime.fromISO(e.end.dateTime, { setZone: true }).setZone(ZONE).toFormat('HH:mm');\n    }\n  } else if (e.start && e.start.date) {\n    date = e.start.date;\n  } else {\n    continue;\n  }\n\n  const title = (e.summary || '').trim().slice(0, 100) || 'אירוע ללא שם';\n  const notes = (e.description || '').trim().slice(0, 500) || null;\n  rows.push({\n    title,\n    date,\n    start_time,\n    end_time,\n    notes,\n    source: 'google',\n    status: 'pending',\n    assigned_member_ids: [],\n    google_event_id: e.id,\n  });\n}\n// No events: stop here (nothing to insert).\nreturn rows.length ? [{ json: { rows } }] : [];\n"
+      },
+      "id": "cf89a315-4b45-56a3-84cd-2a6380cda6ee",
+      "name": "Convert to Homie rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/events?on_conflict=google_event_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.rows) }}",
+        "options": {}
+      },
+      "id": "14f603be-6921-5871-9601-070c8394f575",
+      "name": "Insert new events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// The insert answers with ONLY the rows created now (duplicates are ignored),\n// so only new events go on to the AI step and a re-run never doubles a suggestion.\nconst out = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n  for (const row of list) if (row && row.id) out.push({ json: row });\n}\nreturn out;\n"
+      },
+      "id": "2b27f2db-88b9-5f74-8780-aea786c34ad3",
+      "name": "Only new events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Request body for the model (ARCHITECTURE.md section 4, path A).\n// Sent: the main prompt word for word, then the event details only (no member\n// names, ids or emails), then the language line (approved 8.11.2026, ADR-12).\nconst PROMPT = \"You are the AI suggestion layer of Homie, a family responsibility management system. You receive an approved or newly imported family event. Suggest one short, practical preparation task that could help the family get ready for the event. The suggestion must be directly related to the event context and should add useful information that is not already written in the event. Do not create, edit, assign or complete anything automatically. Return only a proposed task for parent approval. Do not invent personal facts about the family beyond the provided event data.\";\nconst LANGUAGE_LINE = 'Write the task title in Hebrew, up to 100 characters.';\nconst model = $('Settings').first().json.model;\n\nreturn $input.all().map((item) => {\n  const ev = item.json;\n  const event = {\n    title: ev.title,\n    date: ev.date,\n    start_time: ev.start_time ?? null,\n    end_time: ev.end_time ?? null,\n    notes: ev.notes ? String(ev.notes).slice(0, 500) : null,\n  };\n  const input = `${PROMPT}\\n\\nEvent:\\n${JSON.stringify(event)}\\n\\n${LANGUAGE_LINE}`;\n  return {\n    json: {\n      event,\n      body: {\n        model,\n        input,\n        store: false, // demo data only, and nothing to keep on Google's side\n        generation_config: { thinking_level: 'low' }, // a short suggestion needs little thinking\n        response_format: {\n          type: 'text',\n          mime_type: 'application/json',\n          schema: {\n            type: 'object',\n            properties: { title: { type: 'string' } },\n            required: ['title'],\n          },\n        },\n      },\n    },\n  };\n});\n"
+      },
+      "id": "193d9ad2-3b6a-56c5-848c-8fd252133ea3",
+      "name": "Build AI request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/interactions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Revision",
+              "value": "2026-05-20"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 90000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 12000
+            }
+          }
+        }
+      },
+      "id": "5c906866-2490-52c2-9b81-2c89ce83c52d",
+      "name": "Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "Credential: Header Auth, header name x-goog-api-key. On error the workflow continues: the event is already saved, there is just no suggestion."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Finds the model's JSON text in the answer and checks the structure\n// (course-stack.md): `title` is a non-empty string of up to 100 characters.\nfunction suggestionTitle(answer) {\n  if (!answer || answer.error) return { title: null, reason: 'request failed' };\n  // Interactions API answer: steps[] -> the last 'model_output' step -> its text blocks.\n  let text = null;\n  if (Array.isArray(answer.steps)) {\n    for (const step of answer.steps) {\n      if (step && step.type === 'model_output' && Array.isArray(step.content)) {\n        const parts = step.content.filter((c) => c && c.type === 'text' && typeof c.text === 'string');\n        if (parts.length) text = parts.map((c) => c.text).join('');\n      }\n    }\n  }\n  if (text === null && typeof answer.output_text === 'string') text = answer.output_text;\n  if (typeof text !== 'string') return { title: null, reason: 'no text in answer' };\n  let parsed;\n  try { parsed = JSON.parse(text); } catch (e) { return { title: null, reason: 'not JSON' }; }\n  const title = parsed && typeof parsed.title === 'string' ? parsed.title.trim() : '';\n  if (!title) return { title: null, reason: 'empty title' };\n  if (title.length > 100) return { title: null, reason: 'title too long' };\n  return { title, reason: null };\n}\n\n// One answer per request, in the same order (a failed call is an item with `error`).\n// Invalid or failed: no suggestion; the event itself is already saved.\nconst requests = $('Build AI request').all();\nconst tasks = [];\n$input.all().forEach((item, i) => {\n  const req = requests[i];\n  if (!req) return;\n  const { title } = suggestionTitle(item.json);\n  if (!title) return;\n  tasks.push({\n    title,\n    date: req.json.event.date,\n    time: null,\n    status: 'todo',\n    assigned_member_ids: [],\n    notes: `הצעה לאירוע: ${req.json.event.title}`,\n    source: 'ai',\n    proposal_status: 'proposed',\n  });\n});\nreturn tasks.length ? [{ json: { tasks } }] : [];\n"
+      },
+      "id": "1bf8ce02-ee36-507e-bed9-cb6402e7054e",
+      "name": "Check suggestions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/tasks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.tasks) }}",
+        "options": {}
+      },
+      "id": "49e50a82-d586-5597-863c-5f1f47a9e2fb",
+      "name": "Insert suggestions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "main": [
+        [
+          {
+            "node": "Convert to Homie rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Homie rows": {
+      "main": [
+        [
+          {
+            "node": "Insert new events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert new events": {
+      "main": [
+        [
+          {
+            "node": "Only new events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only new events": {
+      "main": [
+        [
+          {
+            "node": "Build AI request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI request": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini": {
+      "main": [
+        [
+          {
+            "node": "Check suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check suggestions": {
+      "main": [
+        [
+          {
+            "node": "Insert suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 4 hours": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jerusalem"
+  },
+  "active": false,
+  "pinData": {}
+}

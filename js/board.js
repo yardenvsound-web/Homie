@@ -4,7 +4,7 @@
 // Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): event editing, faded done
 // tasks and "last updated" (M7), overlap chip (M8).
 
-import { initProtectedPage } from './nav.js';
+import { initProtectedPage, refreshPendingCount } from './nav.js';
 import { getMembers, renderAvatar } from './members.js';
 import { getBoardTasks, setTaskStatus } from './data/tasks.js';
 import { getBoardEvents } from './data/events.js';
@@ -383,6 +383,7 @@ function initDayBar() {
 
 function refresh() {
   loadDay({ keep: true });
+  refreshPendingCount();
 }
 
 // ---------- Add menu and modals ----------

@@ -58,7 +58,8 @@ export function renderAvatar(member, size = 's', fallbackLetter = '?') {
 // Multi-select of household members (DESIGN.md "בוחר בני בית"), in members.json
 // order. Each chip is a real checkbox + avatar + name, so the selection is never
 // shown by color alone. getSelected() returns ids in members.json order.
-export function renderMemberPicker({ id, legend, selectedIds = [] }) {
+// onChange(selectedIds) runs whenever a chip is checked or unchecked.
+export function renderMemberPicker({ id, legend, selectedIds = [], onChange = null }) {
   const selected = new Set(selectedIds);
   const fieldset = document.createElement('fieldset');
   fieldset.className = 'member-picker';
@@ -95,10 +96,14 @@ export function renderMemberPicker({ id, legend, selectedIds = [] }) {
     inputs.push(input);
   }
 
+  const getSelected = () => inputs.filter((i) => i.checked).map((i) => i.value);
+  if (onChange) list.addEventListener('change', () => onChange(getSelected()));
+
   fieldset.append(legendEl, list);
   return {
     el: fieldset,
     firstInput: inputs[0] ?? null,
-    getSelected: () => inputs.filter((i) => i.checked).map((i) => i.value),
+    legendEl,
+    getSelected,
   };
 }

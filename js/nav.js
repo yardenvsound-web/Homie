@@ -1,11 +1,14 @@
 // Shared navigation: top bar (+ bottom bar on phone) with the signed-in parent
 // and "יציאה". Also bootstraps every protected page (session → members → nav).
+// Pending counter (F28) on the "ממתין לאישור" tab, counted on every page load.
 // Not shown yet (DESIGN.md "מה מוצג בכל שלב"): weekly calendar tab (M8),
-// pending counter (M6), "last updated" (M7).
+// "last updated" (M7).
 // The desktop refresh button appears only on pages that pass onRefresh (ADR-7).
 
 import { requireSession, signOut } from './auth.js';
 import { loadMembers, findParentByUserId, renderAvatar } from './members.js';
+import { countPendingEvents } from './data/events.js';
+import { countProposedTasks } from './data/tasks.js';
 import { MESSAGES, icon, showError, clearError } from './ui.js';
 
 const TABS = [
@@ -33,6 +36,11 @@ function buildLinks(page, className) {
     label.textContent = tab.label;
 
     a.append(iconWrap, label);
+    if (tab.page === 'pending') {
+      a.dataset.pendingLink = '';
+      // Phone: on the icon; desktop: after the label.
+      (className === 'bottomnav' ? iconWrap : a).append(countBadge());
+    }
     li.append(a);
     list.append(li);
   }
@@ -41,6 +49,41 @@ function buildLinks(page, className) {
   nav.setAttribute('aria-label', 'ניווט ראשי');
   nav.append(list);
   return nav;
+}
+
+// Red counter circle. The number itself is the signal (not the color); screen
+// readers get it from the link's aria-label instead (setPendingCount).
+export function countBadge() {
+  const badge = document.createElement('span');
+  badge.className = 'count-badge';
+  badge.dataset.pendingCount = '';
+  badge.setAttribute('aria-hidden', 'true');
+  badge.hidden = true;
+  return badge;
+}
+
+// Shows n on every counter on the page (tabs, and the Pending page title).
+export function setPendingCount(n) {
+  for (const badge of document.querySelectorAll('[data-pending-count]')) {
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  }
+  for (const link of document.querySelectorAll('[data-pending-link]')) {
+    if (n > 0) link.setAttribute('aria-label', MESSAGES.pendingTabLabel(n));
+    else link.removeAttribute('aria-label');
+  }
+}
+
+// Counts pending Google events + proposed AI tasks. On failure the counter is
+// just hidden: the page itself keeps working.
+export async function refreshPendingCount() {
+  try {
+    const [events, tasks] = await Promise.all([countPendingEvents(), countProposedTasks()]);
+    setPendingCount(events + tasks);
+  } catch (err) {
+    console.error('Pending count failed:', err);
+    setPendingCount(0);
+  }
 }
 
 // parent: member object, or null. parentKnown: false when members failed to load
@@ -135,6 +178,7 @@ export function renderNav({ page, title, parent = null, parentKnown = true, onRe
   titleEl.className = 'topbar__title';
   titleEl.setAttribute('aria-hidden', 'true');
   titleEl.textContent = title;
+  if (page === 'pending') titleEl.append(countBadge());
 
   const brand = document.createElement('a');
   brand.className = 'topbar__brand';
@@ -150,6 +194,7 @@ export function renderNav({ page, title, parent = null, parentKnown = true, onRe
 
 // Bootstraps a protected page. onReady(members) runs after members load.
 // onRefresh (optional) adds the desktop "רענון" button to the top bar.
+// The Pending page sets the counter from its own data, so it skips the count here.
 export async function initProtectedPage({ page, title, onReady, onRefresh = null }) {
   const user = await requireSession();
   const main = document.querySelector('main');
@@ -161,6 +206,7 @@ export async function initProtectedPage({ page, title, onReady, onRefresh = null
       const parent = findParentByUserId(user.id);
       if (!parent) console.warn('Signed-in user is not listed in members.json:', user.id);
       renderNav({ page, title, parent, onRefresh });
+      if (page !== 'pending') refreshPendingCount();
       onReady?.(members);
     } catch (err) {
       console.error(err);

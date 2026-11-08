@@ -2,7 +2,7 @@
 // Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): editable quantity (F25),
 // duplicate warning (F26), ✕ delete (F27), "בטל" toast (F46), "last updated" (F11).
 
-import { initProtectedPage } from './nav.js';
+import { initProtectedPage, refreshPendingCount } from './nav.js';
 import { getActiveItems, addItem, markPurchased } from './data/shopping.js';
 import { MESSAGES, LIMITS, icon, showError, clearError } from './ui.js';
 
@@ -223,6 +223,7 @@ async function loadList({ keep = false } = {}) {
 
 function refresh() {
   loadList({ keep: true });
+  refreshPendingCount();
 }
 
 // ---------- Start ----------

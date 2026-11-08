@@ -73,6 +73,30 @@ export const MESSAGES = {
   addItemFailed: 'לא הצלחנו להוסיף את המוצר',
   quantityValue: (qty) => `כמות: ${qty}`,
   markPurchased: (name, qty) => (qty > 1 ? `סמן כנקנה: ${name}, ${qty}` : `סמן כנקנה: ${name}`),
+
+  // Pending (Milestone 6)
+  pendingTitle: 'ממתין לאישור',
+  pendingGoogleTitle: 'אירועי Google חדשים',
+  pendingAiTitle: 'הצעות AI',
+  pendingEmpty: 'אין פריטים שממתינים',
+  pendingCount: (n) => (n === 1 ? 'פריט אחד ממתין' : `${n} פריטים ממתינים`),
+  pendingTabLabel: (n) => (n === 1 ? 'ממתין לאישור, פריט אחד' : `ממתין לאישור, ${n} פריטים`),
+  review: 'בדוק ואשר',
+  dismiss: 'התעלם',
+  approve: 'אשר',
+  reject: 'דחה',
+  reviewEvent: (title) => `בדוק ואשר: ${title}`,
+  dismissEvent: (title) => `התעלם: ${title}`,
+  approveSuggestion: (title) => `אשר את ההצעה: ${title}`,
+  rejectSuggestion: (title) => `דחה את ההצעה: ${title}`,
+  aiSuggestion: 'הצעת AI',
+  approveAssign: 'אשר ושייך',
+  googleApproveTitle: 'אישור ושיוך אירוע Google',
+  googleReadOnly: 'Google · קריאה בלבד',
+  assignOneOrMore: 'שיוך לבן בית אחד או יותר',
+  pickOneMember: 'יש לבחור לפחות בן בית אחד',
+  alreadyHandled: 'הפריט כבר טופל',
+  noValue: '—',
 };
 
 // Input limits (PRD 4.13).
@@ -112,6 +136,8 @@ const ICON_PATHS = {
   trash: '<path d="M4 7h16"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v5.5"/><path d="M14 11v5.5"/>',
   task: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   'chevron-down': '<path d="M6 9.5l6 6 6-6"/>',
+  sparkle: '<path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>',
 };
 
 export function icon(name) {
@@ -214,14 +240,22 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
   dialog.append(form);
 
   let busy = false;
-  const controls = [primary, cancel, closeBtn];
+  // false = the primary button stays unavailable (e.g. no member picked yet).
+  let primaryEnabled = true;
+  const controls = [cancel, closeBtn];
 
   function setBusy(value, label = MESSAGES.saving) {
     busy = value;
     for (const c of controls) c.disabled = value;
+    primary.disabled = value || !primaryEnabled;
     for (const extra of footer.querySelectorAll('[data-modal-extra]')) extra.disabled = value;
     primary.textContent = value ? label : primaryLabel;
     dialog.setAttribute('aria-busy', String(value));
+  }
+
+  function setPrimaryEnabled(value) {
+    primaryEnabled = value;
+    if (!busy) primary.disabled = !value;
   }
 
   // Cleanup runs directly, not only from the 'close' event: browsers may delay
@@ -251,7 +285,7 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
   dialog.addEventListener('close', () => finish());
 
   async function submit() {
-    if (busy) return;
+    if (busy || !primaryEnabled) return;
     clearError(alerts);
     if (await onSubmit()) close();
   }
@@ -265,7 +299,9 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
     body,
     footer,
     alerts,
+    primary,
     setBusy,
+    setPrimaryEnabled,
     close,
     // Error bar inside the modal; "נסו שוב" repeats the save.
     showError: (message) => showError(alerts, message, submit),

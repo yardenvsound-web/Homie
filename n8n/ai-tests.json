@@ -1,0 +1,190 @@
+{
+  "name": "Homie – AI tests (no database writes)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c34b641f-929b-5caa-b7d7-59a9f989462a",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0a247ea-17d6-5bf8-9dc5-43fa6ab3be3a",
+              "name": "model",
+              "value": "gemini-3.5-flash-lite",
+              "type": "string"
+            },
+            {
+              "id": "08bffbfa-0bcc-57ef-a023-0fc4f070ccbd",
+              "name": "supabase_url",
+              "value": "https://irmbzkhlklgrzepgskmd.supabase.co",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28d5efd8-4116-5a57-b0a1-00066a390e95",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        300
+      ],
+      "notes": "The model name lives here only (ARCHITECTURE.md section 4)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ai-tests.md inputs: invented demo events only.\nconst events = [\n  { title: 'אימון כדורגל', date: '2026-11-15', start_time: '16:30', end_time: '18:00', notes: null },\n  { title: 'טיפול שיניים', date: '2026-11-16', start_time: '10:00', end_time: '10:45', notes: 'מרפאת השן הלבנה' },\n  { title: 'יום הולדת לחבר מהכיתה', date: '2026-11-17', start_time: '17:00', end_time: '19:00', notes: null },\n  { title: 'טיול שנתי', date: '2026-11-18', start_time: null, end_time: null, notes: null },\n  { title: 'חוג שחייה', date: '2026-11-19', start_time: '15:00', end_time: '16:00', notes: null },\n  { title: 'אסיפת הורים', date: '2026-11-20', start_time: '19:00', end_time: '20:30', notes: null },\n  { title: 'מבחן בחשבון', date: '2026-11-22', start_time: '08:00', end_time: '09:30', notes: null },\n  { title: 'ארוחת שישי אצל סבתא', date: '2026-11-21', start_time: '19:30', end_time: '22:00', notes: null },\n  { title: 'אימון כדורסל', date: '2026-11-23', start_time: '17:00', end_time: '18:30', notes: 'לא לשכוח בקבוק מים ונעלי ספורט' },\n  { title: 'פגישה', date: '2026-11-24', start_time: '12:00', end_time: '13:00', notes: null },\n  { title: 'Piano lesson', date: '2026-11-25', start_time: '16:00', end_time: '16:45', notes: null },\n  { title: 'הצגה בתיאטרון לילדים', date: '2026-11-26', start_time: '11:00', end_time: '12:30', notes: null },\n];\nreturn events.map((e) => ({ json: e }));\n"
+      },
+      "id": "6afeea94-4ddc-5b42-a767-9bc189907afe",
+      "name": "Test events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Request body for the model (ARCHITECTURE.md section 4, path A).\n// Sent: the main prompt word for word, then the event details only (no member\n// names, ids or emails), then the language line (approved 8.11.2026, ADR-12).\nconst PROMPT = \"You are the AI suggestion layer of Homie, a family responsibility management system. You receive an approved or newly imported family event. Suggest one short, practical preparation task that could help the family get ready for the event. The suggestion must be directly related to the event context and should add useful information that is not already written in the event. Do not create, edit, assign or complete anything automatically. Return only a proposed task for parent approval. Do not invent personal facts about the family beyond the provided event data.\";\nconst LANGUAGE_LINE = 'Write the task title in Hebrew, up to 100 characters.';\nconst model = $('Settings').first().json.model;\n\nreturn $input.all().map((item) => {\n  const ev = item.json;\n  const event = {\n    title: ev.title,\n    date: ev.date,\n    start_time: ev.start_time ?? null,\n    end_time: ev.end_time ?? null,\n    notes: ev.notes ? String(ev.notes).slice(0, 500) : null,\n  };\n  const input = `${PROMPT}\\n\\nEvent:\\n${JSON.stringify(event)}\\n\\n${LANGUAGE_LINE}`;\n  return {\n    json: {\n      event,\n      body: {\n        model,\n        input,\n        store: false, // demo data only, and nothing to keep on Google's side\n        generation_config: { thinking_level: 'low' }, // a short suggestion needs little thinking\n        response_format: {\n          type: 'text',\n          mime_type: 'application/json',\n          schema: {\n            type: 'object',\n            properties: { title: { type: 'string' } },\n            required: ['title'],\n          },\n        },\n      },\n    },\n  };\n});\n"
+      },
+      "id": "193d9ad2-3b6a-56c5-848c-8fd252133ea3",
+      "name": "Build AI request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/interactions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Revision",
+              "value": "2026-05-20"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 90000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 12000
+            }
+          }
+        }
+      },
+      "id": "5c906866-2490-52c2-9b81-2c89ce83c52d",
+      "name": "Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "Credential: Header Auth, header name x-goog-api-key. On error the workflow continues: the event is already saved, there is just no suggestion."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Finds the model's JSON text in the answer and checks the structure\n// (course-stack.md): `title` is a non-empty string of up to 100 characters.\nfunction suggestionTitle(answer) {\n  if (!answer || answer.error) return { title: null, reason: 'request failed' };\n  // Interactions API answer: steps[] -> the last 'model_output' step -> its text blocks.\n  let text = null;\n  if (Array.isArray(answer.steps)) {\n    for (const step of answer.steps) {\n      if (step && step.type === 'model_output' && Array.isArray(step.content)) {\n        const parts = step.content.filter((c) => c && c.type === 'text' && typeof c.text === 'string');\n        if (parts.length) text = parts.map((c) => c.text).join('');\n      }\n    }\n  }\n  if (text === null && typeof answer.output_text === 'string') text = answer.output_text;\n  if (typeof text !== 'string') return { title: null, reason: 'no text in answer' };\n  let parsed;\n  try { parsed = JSON.parse(text); } catch (e) { return { title: null, reason: 'not JSON' }; }\n  const title = parsed && typeof parsed.title === 'string' ? parsed.title.trim() : '';\n  if (!title) return { title: null, reason: 'empty title' };\n  if (title.length > 100) return { title: null, reason: 'title too long' };\n  return { title, reason: null };\n}\n\n// One row per test input: the event, the suggestion (or why there is none).\nconst requests = $('Build AI request').all();\nreturn $input.all().map((item, i) => {\n  const ev = requests[i] ? requests[i].json.event : {};\n  const { title, reason } = suggestionTitle(item.json);\n  return { json: { n: i + 1, event: ev.title, notes: ev.notes, suggestion: title, valid: !!title, reason } };\n});\n"
+      },
+      "id": "07ee3c66-d9c3-5c5c-b7f0-591f41292f96",
+      "name": "Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Test events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test events": {
+      "main": [
+        [
+          {
+            "node": "Build AI request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI request": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini": {
+      "main": [
+        [
+          {
+            "node": "Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jerusalem"
+  },
+  "active": false,
+  "pinData": {}
+}

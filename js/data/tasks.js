@@ -53,3 +53,46 @@ export async function deleteTask(id) {
   if (error) throw error;
   return { found: data.length > 0 };
 }
+
+// ---------- Proposed AI suggestions (F30, F38) ----------
+
+export async function getProposedTasks() {
+  const { data, error } = await db
+    .from('tasks')
+    .select('id, title, date, notes, created_at')
+    .eq('proposal_status', 'proposed')
+    .order('date', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function countProposedTasks() {
+  const { count, error } = await db
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('proposal_status', 'proposed');
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// Conditional update (ARCHITECTURE.md section 3): only a still-proposed row changes.
+async function resolveSuggestion(id, proposalStatus) {
+  const { data, error } = await db
+    .from('tasks')
+    .update({ proposal_status: proposalStatus, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('proposal_status', 'proposed')
+    .select('id');
+  if (error) throw error;
+  return { found: data.length > 0 };
+}
+
+// Approved: becomes a regular task on the board (still unassigned, editable).
+export function approveSuggestion(id) {
+  return resolveSuggestion(id, 'approved');
+}
+
+export function rejectSuggestion(id) {
+  return resolveSuggestion(id, 'rejected');
+}

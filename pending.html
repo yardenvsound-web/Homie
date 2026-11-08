@@ -14,13 +14,40 @@
     <script type="module" src="js/supabase.js"></script>
   </head>
   <body class="is-loading">
-    <main class="page">
-      <h1 class="screen-title">ממתין לאישור</h1>
+    <main class="page pending">
+      <div class="pending__head">
+        <h1 class="screen-title">ממתין לאישור <span class="count-badge count-badge--title" data-pending-count aria-hidden="true" hidden></span></h1>
+        <!-- Phone only; on desktop the refresh button is in the top bar (ADR-7) -->
+        <button type="button" class="icon-btn pending__refresh" data-refresh></button>
+      </div>
       <p class="screen-subtitle">פריטים שממתינים לפעולת הורה</p>
+
+      <div class="pending__alerts"></div>
+      <p class="visually-hidden" role="status" aria-live="polite" id="pending-status"></p>
+
+      <div class="pending__content" aria-busy="true">
+        <div class="skeleton" aria-hidden="true">
+          <div class="skeleton__row"></div>
+          <div class="skeleton__row"></div>
+          <div class="skeleton__row"></div>
+        </div>
+
+        <section class="pending-section" id="pending-google" aria-labelledby="pending-google-title" hidden>
+          <h2 class="section-title" id="pending-google-title" tabindex="-1"></h2>
+          <ul class="pending-list"></ul>
+        </section>
+
+        <section class="pending-section" id="pending-ai" aria-labelledby="pending-ai-title" hidden>
+          <h2 class="section-title" id="pending-ai-title" tabindex="-1"></h2>
+          <ul class="pending-list"></ul>
+        </section>
+
+        <div class="empty-state empty-state--compact" hidden>
+          <span class="empty-state__icon"></span>
+          <p class="empty-state__text"></p>
+        </div>
+      </div>
     </main>
-    <script type="module">
-      import { initProtectedPage } from './js/nav.js';
-      initProtectedPage({ page: 'pending', title: 'ממתין לאישור' });
-    </script>
+    <script type="module" src="js/pending.js"></script>
   </body>
 </html>

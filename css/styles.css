@@ -1,0 +1,112 @@
+/* Homie base styles. Mobile first (375px), RTL.
+   Uses only variables from tokens/tokens.css — no hard-coded values. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: var(--font-body);
+  font-family: var(--font-family);
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* Keyboard focus ring on every interactive element */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-s);
+}
+
+/* Page container */
+.page {
+  padding: var(--space-4) var(--space-screen-margin);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.page--center {
+  align-items: center;
+  text-align: center;
+  padding-top: var(--space-6);
+}
+
+.brand {
+  font: var(--font-display);
+  color: var(--color-primary);
+}
+
+.tagline {
+  font: var(--font-title-m);
+  color: var(--color-text);
+}
+
+.screen-title {
+  font: var(--font-title-l);
+}
+
+.screen-subtitle {
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
+/* Temporary skeleton navigation (Milestone 1 only, see js/skeleton-nav.js) */
+.skeleton-nav {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-screen-margin);
+}
+
+.skeleton-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.skeleton-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-1);
+  color: var(--color-primary);
+  font: var(--font-label);
+  text-decoration: none;
+}
+
+/* Active link: underline + weight, not color alone */
+.skeleton-nav a[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Wider screens (media queries cannot read CSS variables, so the breakpoint is literal) */
+@media (min-width: 768px) {
+  .page {
+    padding-top: var(--space-5);
+  }
+}

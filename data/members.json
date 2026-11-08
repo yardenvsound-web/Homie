@@ -1,0 +1,6 @@
+[
+  { "id": "m1", "name": "יואב", "tint": "#E3EADC", "color": "#6F9170", "avatar": "assets/avatars/m1.png", "is_parent": true,  "supabase_user_id": "c809b3a7-d93f-4f7c-a4e5-683419ed5d49" },
+  { "id": "m2", "name": "דנה",  "tint": "#F4DFD5", "color": "#CB7A56", "avatar": "assets/avatars/m2.png", "is_parent": true,  "supabase_user_id": "f04667a4-c1bd-41a4-acdf-414e1f561df8" },
+  { "id": "m3", "name": "נועה", "tint": "#F7EACB", "color": "#D6A23E", "avatar": "assets/avatars/m3.png", "is_parent": false },
+  { "id": "m4", "name": "איתי", "tint": "#E9DFCE", "color": "#6C93A6", "avatar": "assets/avatars/m4.png", "is_parent": false }
+]

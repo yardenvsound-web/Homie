@@ -64,5 +64,5 @@
 
 ## פקודות הרצה
 > Claude ממלא זאת ברגע שהאפליקציה יכולה לרוץ (בדרך כלל בסיום Milestone 1), ומעדכן אם משהו משתנה.
-- **הרצה (dev):** `<command>`
-- **בדיקות (test):** `<command, או "אין">`
+- **הרצה (dev):** `python3 -m http.server 8000` משורש הפרויקט, ואז לפתוח `http://localhost:8000/login.html`
+- **בדיקות (test):** אין. בדיקת מסד הנתונים: להריץ את `sql/check.sql` ב-SQL Editor של Supabase.

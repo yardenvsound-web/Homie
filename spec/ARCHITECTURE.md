@@ -410,3 +410,14 @@ You are the AI suggestion layer of Homie, a family responsibility management sys
 - כל הנתיבים בקוד יחסיים (`js/…`, `data/members.json`), כדי שיעבדו גם מקומית (`/`) וגם ב-GitHub Pages (`/Homie/`).
 - הכניסה היא אימייל וסיסמה בלבד, ולכן Supabase לא צריך כתובת הפניה (Redirect URL) ל-localhost.
 - האתר המקומי מתחבר לאותו פרויקט Supabase של האתר החי (אין הפרדה בין Development ל-Production ב-V1). נתוני הדמה משותפים לשניהם.
+
+### ADR-2: תאריכי נתוני הדמה יחסיים להיום
+**הקשר:** הלוח מציג את היום הנוכחי. נתוני דמה עם תאריכים קבועים היו משאירים את הלוח ריק בכל יום אחר שבו בודקים.
+**החלטה:** `sql/seed.sql` מחשב כל תאריך כ-`(now() at time zone 'Asia/Jerusalem')::date + n`. הקובץ מוחק קודם את שלוש הטבלאות, ולכן אפשר להריץ אותו שוב בכל עת כדי לרענן את התאריכים.
+**השלכות:** הרצה חוזרת של `seed.sql` מוחקת כל מה שנוצר באתר. זה מותר רק כל עוד יש במסד נתוני דמה בלבד.
+
+### ADR-3: ניווט זמני עד Milestone 2
+**הקשר:** ה-Definition of Done של Milestone 1 דורש מעבר בין הדפים, אבל סרגל הניווט (`js/nav.js`) נבנה רק ב-Milestone 2.
+**החלטה:** `js/skeleton-nav.js` מוסיף לכל דף רשימת קישורים פשוטה (כולל "כניסה"), עם `aria-current` וקו תחתון לדף הנוכחי.
+**השלכות:** ב-Milestone 2 מוחקים את `js/skeleton-nav.js` ואת הסגנונות `.skeleton-nav` ב-`css/styles.css`, ומסירים את תג ה-`<script>` שלו מארבעת הדפים.
+

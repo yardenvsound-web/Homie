@@ -78,6 +78,13 @@ textarea:focus-visible {
   color: var(--color-primary);
 }
 
+.brand__logo {
+  display: block;
+  width: 120px;
+  height: auto;
+  margin: 0 auto var(--space-2);
+}
+
 .tagline {
   font: var(--font-title-m);
   color: var(--color-text);
@@ -352,6 +359,14 @@ textarea:focus-visible {
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.topbar__logo {
+  width: 28px;
+  height: 28px;
 }
 
 /* Desktop links: hidden on phone */

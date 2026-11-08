@@ -183,7 +183,13 @@ export function renderNav({ page, title, parent = null, parentKnown = true, onRe
   const brand = document.createElement('a');
   brand.className = 'topbar__brand';
   brand.href = 'index.html';
-  brand.textContent = 'Homie';
+  const logo = document.createElement('img');
+  logo.className = 'topbar__logo';
+  logo.src = 'img/logo-mark.png';
+  logo.alt = '';
+  logo.width = 28;
+  logo.height = 28;
+  brand.append(logo, 'Homie');
 
   header.append(titleEl, brand, buildLinks(page, 'topnav'));
   if (onRefresh) {

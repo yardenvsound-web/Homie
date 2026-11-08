@@ -12,7 +12,7 @@ import { todayISO, addDays, formatDayLabel, formatTime, minutesOf } from './time
 import { TIMELINE_START_HOUR, TIMELINE_END_HOUR } from './config.js';
 import {
   MESSAGES, STATUS_LABELS, SOURCE_TAGS, icon, showError, clearError,
-  markLoading, markLoaded, markFailed, lastUpdatedDetail, flagChip,
+  markLoading, markLoaded, markFailed, lastUpdatedDetail, flagChip, isRecentGoogleUpdate,
 } from './ui.js';
 import { openTaskModal } from './task-modal.js';
 import { openEventModal } from './event-modal.js';
@@ -242,7 +242,7 @@ function renderEventCard(event) {
   meta.className = 'item-card__meta';
   meta.append(timeMeta(eventTimeText(event)), renderAssignees(members));
   const flags = flagsRow();
-  if (event.source === 'google' && event.updated_from_google) flags.append(flagChip('updated')); // F32
+  if (event.source === 'google' && isRecentGoogleUpdate(event)) flags.append(flagChip('updated')); // F32, F50
   body.append(title, meta, flags);
 
   const source = SOURCE_TAGS[event.source] ?? SOURCE_TAGS.homie;

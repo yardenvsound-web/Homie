@@ -74,7 +74,7 @@
         "timeMin": "={{ $now.setZone('Asia/Jerusalem').startOf('day').toISO() }}",
         "timeMax": "={{ $now.setZone('Asia/Jerusalem').startOf('day').plus({ days: 30 }).toISO() }}",
         "options": {
-          "singleEvents": true
+          "showDeleted": true
         }
       },
       "id": "49670113-3616-5c33-8749-6ca928319da1",
@@ -90,7 +90,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Google event -> row for the `events` table (Israel time, ARCHITECTURE.md section 2).\n// All-day events: date only, both times null. Multi-day events: start day only.\nconst ZONE = 'Asia/Jerusalem';\nconst rows = [];\nfor (const item of $input.all()) {\n  const e = item.json;\n  if (!e.id || e.status === 'cancelled') continue;\n\n  let date = null;\n  let start_time = null;\n  let end_time = null;\n  if (e.start && e.start.dateTime) {\n    const start = DateTime.fromISO(e.start.dateTime, { setZone: true }).setZone(ZONE);\n    date = start.toISODate();\n    start_time = start.toFormat('HH:mm');\n    if (e.end && e.end.dateTime) {\n      end_time = DateTime.fromISO(e.end.dateTime, { setZone: true }).setZone(ZONE).toFormat('HH:mm');\n    }\n  } else if (e.start && e.start.date) {\n    date = e.start.date;\n  } else {\n    continue;\n  }\n\n  const title = (e.summary || '').trim().slice(0, 100) || 'אירוע ללא שם';\n  const notes = (e.description || '').trim().slice(0, 500) || null;\n  rows.push({\n    title,\n    date,\n    start_time,\n    end_time,\n    notes,\n    source: 'google',\n    status: 'pending',\n    assigned_member_ids: [],\n    google_event_id: e.id,\n  });\n}\n// No events: stop here (nothing to insert).\nreturn rows.length ? [{ json: { rows } }] : [];\n"
+        "jsCode": "// Google event -> row for the `events` table (Israel time, ARCHITECTURE.md section 2).\n// All-day events: date only, both times null. Multi-day events: start day only.\n// F48 (ADR-19): events Google marks 'cancelled' (deleted) go to `cancelled_ids`.\n// Always returns one item, even with no events, so deletions are still handled.\nconst ZONE = 'Asia/Jerusalem';\nconst rows = [];\nconst cancelled_ids = [];\nfor (const item of $input.all()) {\n  const e = item.json;\n  if (!e.id) continue;\n  if (e.status === 'cancelled') {\n    cancelled_ids.push(e.id);\n    continue;\n  }\n\n  let date = null;\n  let start_time = null;\n  let end_time = null;\n  if (e.start && e.start.dateTime) {\n    const start = DateTime.fromISO(e.start.dateTime, { setZone: true }).setZone(ZONE);\n    date = start.toISODate();\n    start_time = start.toFormat('HH:mm');\n    if (e.end && e.end.dateTime) {\n      end_time = DateTime.fromISO(e.end.dateTime, { setZone: true }).setZone(ZONE).toFormat('HH:mm');\n    }\n  } else if (e.start && e.start.date) {\n    date = e.start.date;\n  } else {\n    continue;\n  }\n\n  const title = (e.summary || '').trim().slice(0, 100) || 'אירוע ללא שם';\n  const notes = (e.description || '').trim().slice(0, 500) || null;\n  rows.push({\n    title,\n    date,\n    start_time,\n    end_time,\n    notes,\n    source: 'google',\n    status: 'pending',\n    assigned_member_ids: [],\n    google_event_id: e.id,\n  });\n}\nreturn [{ json: { rows, cancelled_ids } }];\n"
       },
       "id": "cf89a315-4b45-56a3-84cd-2a6380cda6ee",
       "name": "Convert to Homie rows",
@@ -118,7 +118,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.rows) }}",
+        "jsonBody": "={{ JSON.stringify($('Convert to Homie rows').first().json.rows) }}",
         "options": {}
       },
       "id": "14f603be-6921-5871-9601-070c8394f575",
@@ -126,22 +126,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1100,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// The insert answers with ONLY the rows created now (duplicates are ignored),\n// so only new events go on to the AI step and a re-run never doubles a suggestion.\nconst out = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n  for (const row of list) if (row && row.id) out.push({ json: row });\n}\nreturn out;\n"
-      },
-      "id": "2b27f2db-88b9-5f74-8780-aea786c34ad3",
-      "name": "Only new events",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1320,
-        300
-      ]
+        2288,
+        -96
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -152,8 +141,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1540,
-        300
+        2704,
+        -96
       ]
     },
     {
@@ -189,8 +178,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1760,
-        300
+        2912,
+        -96
       ],
       "onError": "continueRegularOutput",
       "retryOnFail": true,
@@ -207,8 +196,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1980,
-        300
+        3120,
+        -96
       ]
     },
     {
@@ -236,8 +225,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2200,
-        300
+        3328,
+        -96
       ]
     },
     {
@@ -253,22 +242,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1100,
-        520
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// F32 (ADR-18): compare each Google event with its row in Homie and keep only\n// the ones that really changed. Unchanged events produce no output, so a re-run\n// never marks an event \"עודכן ב-Google\" by mistake. New events are not in the\n// database yet (or match exactly), so they never count as changed.\nconst fromGoogle = $('Convert to Homie rows').first().json.rows || [];\n\nconst existing = new Map();\nfor (const item of $input.all()) {\n  const j = item.json;\n  const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n  for (const row of list) if (row && row.google_event_id) existing.set(row.google_event_id, row);\n}\n\n// Postgres returns '09:00:00'; Google rows use '09:00'. Empty notes = null.\nconst time = (t) => (t ? String(t).slice(0, 5) : null);\nconst text = (v) => (v === undefined || v === null || v === '' ? null : String(v));\n\nconst now = new Date().toISOString();\nconst out = [];\nfor (const g of fromGoogle) {\n  const row = existing.get(g.google_event_id);\n  if (!row) continue;\n  const changed =\n    text(row.title) !== text(g.title) ||\n    text(row.date) !== text(g.date) ||\n    time(row.start_time) !== time(g.start_time) ||\n    time(row.end_time) !== time(g.end_time) ||\n    text(row.notes) !== text(g.notes);\n  if (!changed) continue;\n  out.push({\n    json: {\n      id: row.id,\n      fields: {\n        title: g.title,\n        date: g.date,\n        start_time: g.start_time,\n        end_time: g.end_time,\n        notes: g.notes,\n        updated_from_google: true,\n        updated_at: now,\n      },\n    },\n  });\n}\nreturn out;\n"
-      },
-      "id": "58d21bcc-c492-5c59-aa1a-f817d92af1c1",
-      "name": "Find changed events",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1320,
-        520
-      ]
+        1248,
+        -96
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
     },
     {
       "parameters": {
@@ -295,12 +273,154 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1540,
-        520
+        2080,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// F32, F48, F49 (ADR-18, ADR-19): compare Google with Homie and decide what to do.\n// Output is always ONE item, so the chain goes on to insert new events even when\n// nothing changed:\n//   updates              - events that really changed in Google (F32)\n//   dismiss_ids          - Homie events that Google marks as cancelled (F48)\n//   stale_suggestion_ids - pending AI suggestions of changed or cancelled events\n//   events_for_ai        - changed events that had a pending suggestion (F49)\nconst { rows: fromGoogle = [], cancelled_ids = [] } = $('Convert to Homie rows').first().json;\n\n// HTTP answers may come as one array item or as one item per row.\nconst listOf = (items) => {\n  const out = [];\n  for (const item of items) {\n    const j = item.json;\n    const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n    for (const row of list) if (row && row.id) out.push(row);\n  }\n  return out;\n};\n\n// Not dismissed only (the query filters), so an already dismissed event is skipped.\nconst existing = new Map();\nfor (const row of listOf($('Read existing Google events').all())) {\n  if (row.google_event_id) existing.set(row.google_event_id, row);\n}\nconst suggestions = listOf($input.all());\n\n// No column links a suggestion to its event: it is found by the notes text and the\n// date it was saved with (Check suggestions), using the event's OLD data from Homie.\nconst suggestionIdsOf = (row) =>\n  suggestions\n    .filter((s) => s.notes === `הצעה לאירוע: ${row.title}` && String(s.date) === String(row.date))\n    .map((s) => s.id);\n\n// Postgres returns '09:00:00'; Google rows use '09:00'. Empty notes = null.\nconst time = (t) => (t ? String(t).slice(0, 5) : null);\nconst text = (v) => (v === undefined || v === null || v === '' ? null : String(v));\n\nconst now = new Date().toISOString();\nconst updates = [];\nconst events_for_ai = [];\nconst stale = new Set();\nfor (const g of fromGoogle) {\n  const row = existing.get(g.google_event_id);\n  if (!row) continue;\n  const changed =\n    text(row.title) !== text(g.title) ||\n    text(row.date) !== text(g.date) ||\n    time(row.start_time) !== time(g.start_time) ||\n    time(row.end_time) !== time(g.end_time) ||\n    text(row.notes) !== text(g.notes);\n  if (!changed) continue;\n  updates.push({\n    id: row.id,\n    fields: {\n      title: g.title,\n      date: g.date,\n      start_time: g.start_time,\n      end_time: g.end_time,\n      notes: g.notes,\n      updated_from_google: true,\n      updated_at: now,\n    },\n  });\n  const ids = suggestionIdsOf(row);\n  if (ids.length) {\n    ids.forEach((id) => stale.add(id));\n    // Only events that had a pending suggestion go back to the model (F49).\n    events_for_ai.push({ id: row.id, title: g.title, date: g.date, start_time: g.start_time, end_time: g.end_time, notes: g.notes });\n  }\n}\n\nconst dismiss_ids = [];\nfor (const gid of cancelled_ids) {\n  const row = existing.get(gid);\n  if (!row) continue;\n  dismiss_ids.push(row.id);\n  suggestionIdsOf(row).forEach((id) => stale.add(id));\n}\n\nreturn [{ json: { updates, dismiss_ids, stale_suggestion_ids: [...stale], events_for_ai, now } }];\n"
+      },
+      "id": "58d21bcc-c492-5c59-aa1a-f817d92af1c1",
+      "name": "Find changes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Events that go to the model: the rows created now (the insert answers with ONLY\n// new rows, duplicates are ignored) plus changed events whose pending suggestion\n// was just deleted (F49). A re-run without changes sends nothing.\nconst out = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n  for (const row of list) if (row && row.id) out.push({ json: row });\n}\nfor (const ev of $('Find changes').first().json.events_for_ai || []) out.push({ json: ev });\nreturn out;\n"
+      },
+      "id": "2b27f2db-88b9-5f74-8780-aea786c34ad3",
+      "name": "Events for AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/tasks?source=eq.ai&proposal_status=eq.proposed&select=id,notes,date",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "80a7632f-d79d-4df7-8b7d-7eae040f60c0",
+      "name": "Read pending suggestions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        -96
+      ],
+      "notes": "F49: pending AI suggestions, to find the ones of changed or deleted events.",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/events?id=in.({{ ($('Find changes').first().json.dismiss_ids.length ? $('Find changes').first().json.dismiss_ids : ['00000000-0000-0000-0000-000000000000']).join(',') }})&source=eq.google&status=neq.dismissed",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'dismissed', updated_at: $('Find changes').first().json.now }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "991626fd-a840-44f3-a100-7540b00634d7",
+      "name": "Dismiss deleted events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1872,
+        -96
+      ],
+      "notes": "F48: events deleted in Google. With no ids, a placeholder id that matches nothing keeps the chain going.",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/tasks?id=in.({{ ($('Find changes').first().json.stale_suggestion_ids.length ? $('Find changes').first().json.stale_suggestion_ids : ['00000000-0000-0000-0000-000000000000']).join(',') }})&source=eq.ai&proposal_status=eq.proposed",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "23207eb9-b8a0-4c63-b867-866d9ce2cabb",
+      "name": "Delete stale suggestions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2080,
+        -96
+      ],
+      "notes": "F48, F49: only suggestions still proposed, so one a parent just approved is kept.",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// One item per changed event, for the PATCH below. No changes: no output, and this\n// side branch simply ends (the main chain does not depend on it).\nreturn ($input.first().json.updates || []).map((u) => ({ json: u }));\n"
+      },
+      "id": "ac70112f-52ed-4268-a252-71066c83b6d0",
+      "name": "Split updates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        128
       ]
     }
   ],
   "connections": {
+    "Every 4 hours": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Settings": {
       "main": [
         [
@@ -327,12 +447,78 @@
       "main": [
         [
           {
-            "node": "Insert new events",
+            "node": "Read existing Google events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read existing Google events": {
+      "main": [
+        [
+          {
+            "node": "Read pending suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read pending suggestions": {
+      "main": [
+        [
+          {
+            "node": "Find changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find changes": {
+      "main": [
+        [
+          {
+            "node": "Split updates",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Read existing Google events",
+            "node": "Dismiss deleted events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split updates": {
+      "main": [
+        [
+          {
+            "node": "Update changed events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dismiss deleted events": {
+      "main": [
+        [
+          {
+            "node": "Delete stale suggestions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete stale suggestions": {
+      "main": [
+        [
+          {
+            "node": "Insert new events",
             "type": "main",
             "index": 0
           }
@@ -343,14 +529,14 @@
       "main": [
         [
           {
-            "node": "Only new events",
+            "node": "Events for AI",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Only new events": {
+    "Events for AI": {
       "main": [
         [
           {
@@ -388,50 +574,6 @@
         [
           {
             "node": "Insert suggestions",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Every 4 hours": {
-      "main": [
-        [
-          {
-            "node": "Settings",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Run manually": {
-      "main": [
-        [
-          {
-            "node": "Settings",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read existing Google events": {
-      "main": [
-        [
-          {
-            "node": "Find changed events",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Find changed events": {
-      "main": [
-        [
-          {
-            "node": "Update changed events",
             "type": "main",
             "index": 0
           }

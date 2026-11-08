@@ -28,3 +28,12 @@ select title, date, start_time, end_time, status, assigned_member_ids, updated_a
 from public.events
 where source = 'google' and updated_from_google = true
 order by updated_at desc;
+
+-- Milestone 9 check (after deleting / changing events in Google and running W1):
+-- cancelled Google events are dismissed; each event has at most ONE pending suggestion
+-- (proposed_per_event_max must be 0 or 1).
+select
+  (select count(*) from public.events where source = 'google' and status = 'dismissed') as google_dismissed,
+  (select coalesce(max(c), 0) from (select count(*) c from public.tasks
+                                     where source = 'ai' and proposal_status = 'proposed'
+                                     group by notes, date) p)                          as proposed_per_event_max;

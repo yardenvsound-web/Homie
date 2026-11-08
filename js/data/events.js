@@ -3,7 +3,7 @@
 import { db } from '../supabase.js';
 
 // `notes` is included so the edit modal opens filled without another query.
-const BOARD_FIELDS = 'id, title, date, start_time, end_time, source, assigned_member_ids, notes, updated_from_google, created_at';
+const BOARD_FIELDS = 'id, title, date, start_time, end_time, source, assigned_member_ids, notes, updated_from_google, updated_at, created_at';
 
 // Events shown on the daily board: approved only (pending / dismissed Google
 // events never reach the board).
@@ -59,7 +59,7 @@ export async function deleteEvent(id) {
 
 // ---------- Pending Google events (F28, F29, F43) ----------
 
-const PENDING_FIELDS = 'id, title, date, start_time, end_time, notes, updated_from_google, created_at';
+const PENDING_FIELDS = 'id, title, date, start_time, end_time, notes, updated_from_google, updated_at, created_at';
 
 // Google events waiting for a parent, including past dates (PRD 4.14).
 export async function getPendingEvents() {

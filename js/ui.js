@@ -164,6 +164,16 @@ const FLAG_CHIPS = {
   updated: { icon: 'refresh', label: () => MESSAGES.updatedFromGoogle },
 };
 
+// F50: "עודכן ב-Google" shows only for 3 days after the event's last update.
+// `updated_at` is a timestamptz, so the difference is time-zone independent.
+const GOOGLE_UPDATE_DAYS = 3;
+
+export function isRecentGoogleUpdate(event) {
+  if (!event.updated_from_google || !event.updated_at) return false;
+  const age = Date.now() - new Date(event.updated_at).getTime();
+  return age < GOOGLE_UPDATE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 export function flagChip(kind) {
   const chip = document.createElement('span');
   chip.className = `chip chip--flag chip--${kind}`;

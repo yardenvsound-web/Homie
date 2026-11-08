@@ -10,7 +10,7 @@ import { getProposedTasks, approveSuggestion, rejectSuggestion } from './data/ta
 import { formatDayLabel, formatTime } from './time.js';
 import {
   MESSAGES, SOURCE_TAGS, icon, showError, clearError,
-  markLoading, markLoaded, markFailed, lastUpdatedDetail, flagChip,
+  markLoading, markLoaded, markFailed, lastUpdatedDetail, flagChip, isRecentGoogleUpdate,
 } from './ui.js';
 import { openGoogleApproveModal } from './event-modal.js';
 
@@ -101,8 +101,8 @@ function renderEventCard(event) {
   meta.className = 'item-card__meta';
   meta.append(metaLine(formatDayLabel(event.date), 'clock', eventTime(event)), sourceTag(SOURCE_TAGS.google));
   body.append(title, meta);
-  if (event.updated_from_google) {
-    // F32: the event changed in Google after it was imported.
+  if (isRecentGoogleUpdate(event)) {
+    // F32: the event changed in Google after it was imported (shown 3 days, F50).
     const flags = document.createElement('p');
     flags.className = 'item-card__flags';
     flags.append(flagChip('updated'));

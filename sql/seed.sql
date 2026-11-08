@@ -19,7 +19,8 @@ from d, (values
   ('יום הולדת לסבתא',  0, null,    null,    'homie',  'approved',  '["m1","m2","m3","m4"]',   null,             null),
   ('חוג ציור',         1, '17:00', '18:30', 'homie',  'approved',  '["m3"]',                  null,             null),
   ('טיפול שיניים',     2, '10:00', '10:45', 'google', 'pending',   '[]',                      'demo-google-002', 'מרפאת השן הלבנה'),
-  ('הופעת סוף שנה',    2, '19:00', '20:30', 'google', 'dismissed', '[]',                      'demo-google-003', null)
+  ('הופעת סוף שנה',    2, '19:00', '20:30', 'google', 'dismissed', '[]',                      'demo-google-003', null),
+  ('ערב סרט',          1, '21:30', '22:30', 'homie',  'approved',  '["m1","m2","m3","m4"]',   null,             null)
 ) as v(title, day_offset, start_time, end_time, source, status, members, google_event_id, notes);
 
 -- ---------- tasks ----------
@@ -35,7 +36,9 @@ from d, (values
   ('להשקות את העציצים',            0, null,    'todo', '["m3","m4"]', null,                        'manual', 'none'),
   ('להחזיר ספרים לספרייה',         1, '16:00', 'todo', '["m3"]',      null,                        'manual', 'none'),
   ('להכין בגדי ספורט ובקבוק מים',  0, null,    'todo', '[]',          'הצעה לאירוע: אימון כדורגל', 'ai',     'proposed'),
-  ('לקנות צבעים חדשים',            1, null,    'todo', '[]',          'הצעה לאירוע: חוג ציור',     'ai',     'rejected')
+  ('לקנות צבעים חדשים',            1, null,    'todo', '[]',          'הצעה לאירוע: חוג ציור',     'ai',     'rejected'),
+  ('להוציא את הכלב',               0, '06:30', 'todo', '["m4"]',      null,                        'manual', 'none'),
+  ('לתלות כביסה',                 -1, null,    'todo', '["m2"]',      null,                        'manual', 'none')
 ) as v(title, day_offset, task_time, status, members, notes, source, proposal_status);
 
 -- ---------- shopping_items ----------

@@ -14,35 +14,45 @@
     <script type="module" src="js/supabase.js"></script>
   </head>
   <body class="is-loading">
-    <main class="page">
+    <main class="page board">
       <h1 class="screen-title">לוח היום</h1>
-      <!-- TEMPORARY until Milestone 3 (ADR-4): shows the household members. -->
-      <section class="members-strip" aria-labelledby="members-title" hidden>
-        <h2 class="section-title" id="members-title">בני הבית</h2>
-        <ul class="members-strip__list"></ul>
-      </section>
+
+      <div class="daybar">
+        <button type="button" class="icon-btn" data-day="prev"></button>
+        <p class="daybar__date" aria-live="polite"></p>
+        <button type="button" class="icon-btn" data-day="next"></button>
+        <button type="button" class="btn btn--secondary btn--small daybar__today" hidden></button>
+        <button type="button" class="icon-btn daybar__refresh" data-refresh></button>
+      </div>
+
+      <div class="board__alerts"></div>
+
+      <div class="board__content" aria-busy="true">
+        <div class="skeleton" aria-hidden="true">
+          <div class="skeleton__row"></div>
+          <div class="skeleton__row"></div>
+          <div class="skeleton__row"></div>
+          <div class="skeleton__row"></div>
+        </div>
+
+        <section class="board-section" id="untimed" aria-labelledby="untimed-title" hidden>
+          <h2 class="section-title" id="untimed-title">משימות ללא שעה</h2>
+          <ul class="card-list"></ul>
+        </section>
+
+        <section class="board-section" id="timeline" aria-labelledby="timeline-title" hidden>
+          <h2 class="section-title" id="timeline-title">היום לפי שעות</h2>
+          <ol class="timeline"></ol>
+        </section>
+
+        <div class="empty-state" hidden>
+          <span class="empty-state__icon">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+          </span>
+          <p class="empty-state__text"></p>
+        </div>
+      </div>
     </main>
-    <script type="module">
-      import { initProtectedPage } from './js/nav.js';
-      import { renderAvatar } from './js/members.js';
-
-      // TEMPORARY until Milestone 3 (ADR-4).
-      function renderMembersStrip(members) {
-        const section = document.querySelector('.members-strip');
-        const list = section.querySelector('.members-strip__list');
-        list.replaceChildren();
-        for (const member of members) {
-          const li = document.createElement('li');
-          li.className = 'members-strip__item';
-          const name = document.createElement('span');
-          name.textContent = member.name;
-          li.append(renderAvatar(member, 'm'), name);
-          list.append(li);
-        }
-        section.hidden = false;
-      }
-
-      initProtectedPage({ page: 'index', title: 'לוח היום', onReady: renderMembersStrip });
-    </script>
+    <script type="module" src="js/board.js"></script>
   </body>
 </html>

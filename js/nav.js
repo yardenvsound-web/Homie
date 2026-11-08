@@ -1,7 +1,8 @@
 // Shared navigation: top bar (+ bottom bar on phone) with the signed-in parent
 // and "יציאה". Also bootstraps every protected page (session → members → nav).
 // Not shown yet (DESIGN.md "מה מוצג בכל שלב"): weekly calendar tab (M8),
-// pending counter (M6), refresh button (M3), "last updated" (M7).
+// pending counter (M6), "last updated" (M7).
+// The desktop refresh button appears only on pages that pass onRefresh (ADR-7).
 
 import { requireSession, signOut } from './auth.js';
 import { loadMembers, findParentByUserId, renderAvatar } from './members.js';
@@ -108,7 +109,21 @@ function buildAccount(parent, parentKnown) {
   return account;
 }
 
-export function renderNav({ page, title, parent = null, parentKnown = true }) {
+// Desktop / tablet only (hidden on phone by CSS; the phone button lives in the page).
+function buildRefresh(onRefresh) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn--secondary btn--small topbar__refresh';
+  button.dataset.refresh = '';
+  button.append(icon('refresh'));
+  const text = document.createElement('span');
+  text.textContent = MESSAGES.refresh;
+  button.append(text);
+  button.addEventListener('click', () => onRefresh());
+  return button;
+}
+
+export function renderNav({ page, title, parent = null, parentKnown = true, onRefresh = null }) {
   document.querySelector('.topbar')?.remove();
   document.querySelector('.bottomnav')?.remove();
 
@@ -126,13 +141,16 @@ export function renderNav({ page, title, parent = null, parentKnown = true }) {
   brand.href = 'index.html';
   brand.textContent = 'Homie';
 
-  header.append(titleEl, brand, buildLinks(page, 'topnav'), buildAccount(parent, parentKnown));
+  header.append(titleEl, brand, buildLinks(page, 'topnav'));
+  if (onRefresh) header.append(buildRefresh(onRefresh));
+  header.append(buildAccount(parent, parentKnown));
   document.body.prepend(header);
   document.body.append(buildLinks(page, 'bottomnav'));
 }
 
 // Bootstraps a protected page. onReady(members) runs after members load.
-export async function initProtectedPage({ page, title, onReady }) {
+// onRefresh (optional) adds the desktop "רענון" button to the top bar.
+export async function initProtectedPage({ page, title, onReady, onRefresh = null }) {
   const user = await requireSession();
   const main = document.querySelector('main');
 
@@ -142,7 +160,7 @@ export async function initProtectedPage({ page, title, onReady }) {
       clearError(main);
       const parent = findParentByUserId(user.id);
       if (!parent) console.warn('Signed-in user is not listed in members.json:', user.id);
-      renderNav({ page, title, parent });
+      renderNav({ page, title, parent, onRefresh });
       onReady?.(members);
     } catch (err) {
       console.error(err);

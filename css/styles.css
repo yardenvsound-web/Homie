@@ -505,29 +505,331 @@ body:has(.topbar) .page > .screen-title {
   color: var(--color-danger-text);
 }
 
-/* ---------- Temporary members strip (until Milestone 3, ADR-4) ---------- */
+/* ---------- Icon button ---------- */
 
-.members-strip {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.members-strip__list {
+.icon-btn:disabled {
+  color: var(--color-border-field);
+  cursor: default;
+}
+
+/* Refresh in the top bar: desktop / tablet only (phone uses the day bar button) */
+.topbar__refresh {
+  display: none;
+}
+
+.topbar__refresh .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+/* ---------- Daily board ---------- */
+
+.daybar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline: calc(var(--space-2) * -1);
+}
+
+.daybar__date {
+  font: var(--font-title-s);
+  white-space: nowrap;
+}
+
+.daybar__refresh {
+  margin-inline-start: auto;
+}
+
+.board__alerts:empty {
+  display: none;
+}
+
+.board__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.board-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-4);
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.members-strip__item {
+/* ---------- Item cards (task / event) ---------- */
+
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--size-touch-target) + var(--space-4));
+  padding: var(--space-2) var(--space-3);
+  background: var(--card-tint, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-xs);
+}
+
+.item-card--task {
+  padding-inline-start: var(--space-1);
+}
+
+/* Event: member tint + 4px stripe on the start (right) edge */
+.item-card--event {
+  border-inline-start: var(--size-stripe) solid var(--card-stripe, var(--color-border-field));
+}
+
+.item-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.item-card__title {
+  font: var(--font-title-s);
+  overflow-wrap: anywhere;
+}
+
+.item-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
+.meta-time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.meta-time .icon,
+.source-tag .icon {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+.assignees {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.assignees__avatars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.assignees--none {
+  color: var(--color-text-muted);
+}
+
+/* ---------- Checkbox (44×44 touch area, 24×24 box) ---------- */
+
+.check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  flex-shrink: 0;
+}
+
+.check__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.check__box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-checkbox);
+  height: var(--size-checkbox);
+  border: 1.5px solid var(--color-border-field);
+  border-radius: var(--radius-check);
+  background: var(--color-surface);
+  color: var(--color-surface);
+  pointer-events: none;
+}
+
+.check__box .icon {
+  width: var(--space-3);
+  height: var(--space-3);
+  stroke-width: 2.5;
+  visibility: hidden;
+}
+
+/* Checked: the single assignee's stripe color, otherwise sage */
+.check__input:checked + .check__box {
+  background: var(--check-color, var(--color-sage));
+  border-color: var(--check-color, var(--color-sage));
+}
+
+.check__input:checked + .check__box .icon {
+  visibility: visible;
+}
+
+.check__input:focus-visible {
+  box-shadow: none;
+}
+
+.check__input:focus-visible + .check__box {
+  box-shadow: var(--focus-ring);
+}
+
+.item-card[aria-busy='true'] .check__input {
+  cursor: progress;
+}
+
+/* ---------- Chips and tags (display only, never clickable) ---------- */
+
+.chip {
+  flex-shrink: 0;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-s);
+  font: var(--font-caption-xs);
+}
+
+.chip--todo {
+  background: var(--status-todo-bg);
+  color: var(--status-todo-fg);
+}
+
+.chip--done {
+  background: var(--status-done-bg);
+  color: var(--status-done-fg);
+}
+
+.source-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  color: var(--color-text-secondary);
+  font: var(--font-caption-xs);
+}
+
+/* ---------- Timeline ---------- */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Items on the start (right) side, hour label on the end (left) side */
+.timeline__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'items hour';
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px dashed var(--color-line-dashed);
+}
+
+.timeline__row--empty {
+  padding: var(--space-1) 0;
+}
+
+.timeline__hour {
+  grid-area: hour;
+  min-width: var(--space-6);
+  font: var(--font-caption);
+  color: var(--color-text-muted);
+  text-align: left;
+}
+
+.timeline__row--empty .timeline__hour {
+  grid-column: 1 / -1;
+}
+
+.timeline__items {
+  grid-area: items;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* ---------- Loading and empty states ---------- */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeleton__row {
+  height: calc(var(--size-touch-target) + var(--space-4));
+  background: var(--color-border);
+  border-radius: var(--radius-l);
+}
+
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-3);
+  border: 2px dashed var(--color-line-dashed);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.empty-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-avatar-m);
+  height: var(--size-avatar-m);
+  border-radius: var(--radius-full);
+  background: var(--color-sage-light);
+  color: var(--color-primary);
+}
+
+.empty-state__text {
+  font: var(--font-title-s);
 }
 
 /* ---------- Wider screens ---------- */
@@ -609,6 +911,31 @@ body:has(.topbar) .page > .screen-title {
 
   .bottomnav {
     display: none;
+  }
+
+  /* Refresh moves from the day bar to the top bar */
+  .topbar__refresh {
+    display: inline-flex;
+  }
+
+  .daybar__refresh {
+    display: none;
+  }
+
+  .card-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 5), 1fr));
+    gap: var(--space-card-gap);
+  }
+
+  /* Items in the same hour sit side by side */
+  .timeline__items {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .timeline__items > .item-card {
+    flex: 1 1 calc(var(--space-6) * 6);
   }
 
   body:has(.bottomnav) {

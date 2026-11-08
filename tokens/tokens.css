@@ -1,0 +1,114 @@
+/* Home-me design tokens v1 — mirrors tokens.json. Source: DESIGN.md.
+   Load the font: https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap */
+
+:root {
+  /* Neutrals and text (60%) */
+  --color-bg: #F2EBE0;
+  --color-surface: #FFFEFC;
+  --color-border: #E6DFD3;
+  --color-text: #2B2724;
+  --color-text-secondary: #5A534B;
+  --color-text-muted: #6B6258;
+  --color-bg-done: #F7F3EC;
+  --color-line-dashed: #D8CFC0;
+  --color-border-field: #8A7F72;
+
+  /* Earth tones (30%) */
+  --color-oat: #E9DFCE;
+  --color-sage-light: #E3EADC;
+  --color-clay-light: #F4DFD5;
+  --color-sky-light: #DEE8EC;
+  --color-butter: #F7EACB;
+
+  /* Accent and state (10%) */
+  --color-primary: #2F5A4A;
+  --color-primary-pressed: #24473A; /* approved 8.11.2026 */
+  --color-sage: #6F9170;
+  --color-success-text: #38663F;
+  --color-danger: #A33B2B;
+  --color-danger-text: #9A3B28;
+  --color-terracotta: #CB7A56;
+  --color-mustard: #D6A23E;
+  --color-powder-blue: #6C93A6;
+
+  --color-scrim: rgba(43, 39, 36, 0.38);
+
+  /* Household members: tint (background) + stripe (4px edge, checkbox) */
+  --member-yoav-tint: var(--color-sage-light);
+  --member-yoav-stripe: var(--color-sage);
+  --member-dana-tint: var(--color-clay-light);
+  --member-dana-stripe: var(--color-terracotta);
+  --member-noa-tint: var(--color-butter);
+  --member-noa-stripe: var(--color-mustard);
+  --member-itai-tint: var(--color-oat);
+  --member-itai-stripe: var(--color-powder-blue);
+
+  /* Status chips */
+  --status-todo-bg: var(--color-oat);
+  --status-todo-fg: var(--color-text);
+  --status-done-bg: var(--color-sage-light);
+  --status-done-fg: var(--color-success-text);
+  --status-pending-bg: var(--color-butter);
+  --status-pending-fg: var(--color-text);
+  --status-overlap-bg: var(--color-clay-light);
+  --status-overlap-fg: var(--color-danger-text);
+  --status-ai-bg: var(--color-sky-light);
+  --status-ai-fg: var(--color-text);
+
+  /* Typography */
+  --font-family: 'Assistant', sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --font-display: 700 32px/40px var(--font-family);
+  --font-title-l: 700 24px/32px var(--font-family);
+  --font-title-m: 700 20px/28px var(--font-family);
+  --font-title-s: 600 17px/24px var(--font-family);
+  --font-body: 400 17px/26px var(--font-family);
+  --font-caption: 400 14px/20px var(--font-family);
+  --font-label: 600 17px/24px var(--font-family);
+  --font-caption-xs: 600 12px/16px var(--font-family); /* tags and badges only (approved 8.11.2026) */
+
+  /* Spacing (8pt grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-card-padding: var(--space-3);
+  --space-card-gap: var(--space-3);
+  --space-screen-margin: 20px;
+
+  /* Radii */
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 12px;
+  --radius-check: 5px;
+  --radius-device: 30px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(43, 39, 36, 0.06);
+  --shadow-soft: 0 4px 14px rgba(43, 39, 36, 0.08);
+
+  /* Sizes */
+  --size-button-height: 48px;
+  --size-touch-target: 44px;
+  --size-checkbox: 24px;
+  --size-fab: 56px; /* approved 8.11.2026 */
+  --size-icon: 24px;
+  --size-icon-stroke: 1.5;
+  --size-stripe: 4px;
+  --size-avatar-xs: 24px;
+  --size-avatar-s: 32px;
+  --size-avatar-m: 48px;
+  --size-avatar-l: 72px;
+
+  /* Focus */
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary);
+  --focus-field-border: 2px solid var(--color-primary);
+  --focus-field-halo: 0 0 0 4px var(--color-sage-light);
+}

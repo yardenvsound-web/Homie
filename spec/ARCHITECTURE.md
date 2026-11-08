@@ -324,8 +324,11 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 ├── shopping.html          ← רשימת קניות
 ├── pending.html           ← ממתין לאישור
 ├── calendar.html          ← יומן שבועי (F21, אחרי MVP)
+├── tokens/
+│   ├── tokens.css         ← משתני העיצוב (צבעים, גופנים, מרווחים, פינות, צללים) לפי DESIGN.md
+│   └── tokens.json        ← אותם ערכים ב-JSON (עיון בלבד, לא נטען באתר)
 ├── css/
-│   └── styles.css         ← משתני צבע, RTL, מובייל קודם (375px), רכיבים
+│   └── styles.css         ← RTL, מובייל קודם (375px), רכיבים. משתמש רק במשתנים מ-tokens.css
 ├── js/
 │   ├── config.js          ← SUPABASE_URL, SUPABASE_ANON_KEY, TIMEZONE, שעות ה-Timeline (ברירת מחדל 07–22, PRD 4.13), מספר השבועות של חזרתיות (4)
 │   ├── supabase.js        ← יצירת client (ה-global `supabase` מה-CDN)
@@ -364,6 +367,7 @@ You are the AI suggestion layer of Home-me, a family responsibility management s
 ```
 
 ### מוסכמות קוד
+- כל דף HTML טוען את `tokens/tokens.css` ואחריו את `css/styles.css`. אין צבע, גודל או מרווח קבוע בקוד: רק `var(--…)`.
 - כל דף HTML: `<html lang="he" dir="rtl">`, גופן Assistant מ-Google Fonts (משקלים 400, 600, 700, לפי DESIGN.md), `meta viewport`.
 - `supabase-js` גרסה 2 נטען בתג `<script>` רגיל מ-jsDelivr, **בגרסה מדויקת נעולה**, לפני מודולי האפליקציה. מודולי האפליקציה נטענים עם `<script type="module">`.
 - כל גישה לטבלה עוברת דרך `js/data/*.js`. דפים ו-Modals לא פונים ל-`supabase` ישירות.

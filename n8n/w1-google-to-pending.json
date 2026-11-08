@@ -239,6 +239,65 @@
         2200,
         300
       ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/events?source=eq.google&status=neq.dismissed&select=id,google_event_id,title,date,start_time,end_time,notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "id": "a5eccfc1-30df-5834-be13-d79367854144",
+      "name": "Read existing Google events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// F32 (ADR-18): compare each Google event with its row in Homie and keep only\n// the ones that really changed. Unchanged events produce no output, so a re-run\n// never marks an event \"עודכן ב-Google\" by mistake. New events are not in the\n// database yet (or match exactly), so they never count as changed.\nconst fromGoogle = $('Convert to Homie rows').first().json.rows || [];\n\nconst existing = new Map();\nfor (const item of $input.all()) {\n  const j = item.json;\n  const list = Array.isArray(j) ? j : Array.isArray(j.data) ? j.data : (j && j.id ? [j] : []);\n  for (const row of list) if (row && row.google_event_id) existing.set(row.google_event_id, row);\n}\n\n// Postgres returns '09:00:00'; Google rows use '09:00'. Empty notes = null.\nconst time = (t) => (t ? String(t).slice(0, 5) : null);\nconst text = (v) => (v === undefined || v === null || v === '' ? null : String(v));\n\nconst now = new Date().toISOString();\nconst out = [];\nfor (const g of fromGoogle) {\n  const row = existing.get(g.google_event_id);\n  if (!row) continue;\n  const changed =\n    text(row.title) !== text(g.title) ||\n    text(row.date) !== text(g.date) ||\n    time(row.start_time) !== time(g.start_time) ||\n    time(row.end_time) !== time(g.end_time) ||\n    text(row.notes) !== text(g.notes);\n  if (!changed) continue;\n  out.push({\n    json: {\n      id: row.id,\n      fields: {\n        title: g.title,\n        date: g.date,\n        start_time: g.start_time,\n        end_time: g.end_time,\n        notes: g.notes,\n        updated_from_google: true,\n        updated_at: now,\n      },\n    },\n  });\n}\nreturn out;\n"
+      },
+      "id": "58d21bcc-c492-5c59-aa1a-f817d92af1c1",
+      "name": "Find changed events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Settings').first().json.supabase_url }}/rest/v1/events?id=eq.{{ $json.id }}&source=eq.google",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.fields) }}",
+        "options": {}
+      },
+      "id": "a8443690-43f0-5413-bf1a-926529a05ad8",
+      "name": "Update changed events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        520
+      ]
     }
   ],
   "connections": {
@@ -269,6 +328,11 @@
         [
           {
             "node": "Insert new events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read existing Google events",
             "type": "main",
             "index": 0
           }
@@ -346,6 +410,28 @@
         [
           {
             "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read existing Google events": {
+      "main": [
+        [
+          {
+            "node": "Find changed events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find changed events": {
+      "main": [
+        [
+          {
+            "node": "Update changed events",
             "type": "main",
             "index": 0
           }

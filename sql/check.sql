@@ -21,3 +21,10 @@ select
   (select count(*) from public.tasks where source = 'ai' and proposal_status = 'proposed') as ai_proposed,
   (select coalesce(max(c), 0) from (select count(*) c from public.tasks
                                      where source = 'ai' group by notes, date) a)    as ai_per_event_max;
+
+-- Milestone 8 check (after changing an event in Google and running W1):
+-- events updated from Google keep their status and assignees.
+select title, date, start_time, end_time, status, assigned_member_ids, updated_at
+from public.events
+where source = 'google' and updated_from_google = true
+order by updated_at desc;

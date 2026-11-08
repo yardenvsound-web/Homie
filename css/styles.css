@@ -760,6 +760,43 @@ body:has(.topbar) .page .screen-title {
   color: var(--status-done-fg);
 }
 
+/* Flag chips under the meta line (Milestone 8): "חפיפה" (F10), "עודכן ב-Google" (F32).
+   Icon + word, so the state is never color alone. */
+.item-card__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.item-card__flags:empty {
+  display: none;
+}
+
+.chip--flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.chip--flag .icon {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+/* A thin border from the same color family, so the chip still stands out on a
+   card tinted with the same light color (Dana's clay, Noa's butter). */
+.chip--overlap {
+  background: var(--color-clay-light);
+  border: 1px solid var(--color-terracotta);
+  color: var(--color-danger-text);
+}
+
+.chip--updated {
+  background: var(--color-butter);
+  border: 1px solid var(--color-mustard);
+  color: var(--color-text);
+}
+
 .source-tag {
   flex-shrink: 0;
   display: inline-flex;

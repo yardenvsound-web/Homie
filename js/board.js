@@ -1,8 +1,8 @@
 // Daily board (index.html): untimed items + hourly Timeline.
 // F04, F05, F06, F07, F09, F42 (day arrows), F47 (refresh), F41 (Last Write Wins),
 // F12/F14/F44 (task modal), F18 (event modal) through the add menu,
-// F08 (faded done task), F11 ("last updated"), F19/F45 (edit / delete an internal event).
-// Not built yet (hidden, DESIGN.md "מה מוצג בכל שלב"): overlap chip (M8).
+// F08 (faded done task), F11 ("last updated"), F19/F45 (edit / delete an internal event),
+// F10 (overlap chip) and F32 ("עודכן ב-Google" chip).
 
 import { initProtectedPage, refreshPendingCount } from './nav.js';
 import { getMembers, renderAvatar } from './members.js';
@@ -12,10 +12,11 @@ import { todayISO, addDays, formatDayLabel, formatTime, minutesOf } from './time
 import { TIMELINE_START_HOUR, TIMELINE_END_HOUR } from './config.js';
 import {
   MESSAGES, STATUS_LABELS, SOURCE_TAGS, icon, showError, clearError,
-  markLoading, markLoaded, markFailed, lastUpdatedDetail,
+  markLoading, markLoaded, markFailed, lastUpdatedDetail, flagChip,
 } from './ui.js';
 import { openTaskModal } from './task-modal.js';
 import { openEventModal } from './event-modal.js';
+import { findOverlaps, overlapKey } from './overlap.js';
 
 const el = {
   content: document.querySelector('.board__content'),
@@ -43,6 +44,9 @@ let loadSeq = 0;
 // Edited item whose card gets focus back once the board has re-rendered (ADR-8).
 // { kind: 'task' | 'event', id }
 let focusItem = null;
+// Items of the day on screen. A task's status is updated here after a save,
+// so overlap chips can be recomputed without a reload (F10, ADR-17).
+let shownItems = [];
 
 // ---------- Members and colors (DESIGN.md "כללי צבע לפי מספר המשויכים") ----------
 
@@ -82,6 +86,26 @@ function timeMeta(text) {
 
 // ---------- Cards ----------
 
+// Row of display-only chips under the meta line ("חפיפה", "עודכן ב-Google").
+// Hidden by CSS while empty.
+function flagsRow() {
+  const row = document.createElement('p');
+  row.className = 'item-card__flags';
+  return row;
+}
+
+// F10: add / remove the "חפיפה" chip on every card, from shownItems.
+function updateOverlapChips() {
+  const overlapping = findOverlaps(shownItems);
+  for (const card of document.querySelectorAll('.item-card[data-key]')) {
+    const row = card.querySelector('.item-card__flags');
+    const chip = row.querySelector('[data-flag="overlap"]');
+    const should = overlapping.has(card.dataset.key);
+    if (should && !chip) row.prepend(flagChip('overlap'));
+    else if (!should && chip) chip.remove();
+  }
+}
+
 function statusChip(status) {
   const chip = document.createElement('span');
   chip.className = `chip chip--${status}`;
@@ -93,6 +117,7 @@ function renderTaskCard(task) {
   const members = assignedMembers(task.assigned_member_ids);
   const li = document.createElement('li');
   li.className = 'item-card item-card--task';
+  li.dataset.key = overlapKey(task);
   // Checked color: the single assignee's stripe, otherwise sage (the CSS default).
   if (members.length === 1) li.style.setProperty('--check-color', members[0].color);
 
@@ -127,7 +152,7 @@ function renderTaskCard(task) {
   meta.className = 'item-card__meta';
   if (task.time) meta.append(timeMeta(formatTime(task.time)));
   meta.append(renderAssignees(members));
-  body.append(title, meta);
+  body.append(title, meta, flagsRow());
 
   let chip = statusChip(task.status);
 
@@ -162,6 +187,7 @@ function renderTaskCard(task) {
         return;
       }
       task.status = status;
+      updateOverlapChips(); // a done task no longer counts (ADR-17)
     } catch (err) {
       console.error('Status update failed:', err);
       show(previous);
@@ -186,6 +212,7 @@ function renderEventCard(event) {
   const members = assignedMembers(event.assigned_member_ids);
   const li = document.createElement('li');
   li.className = 'item-card item-card--event';
+  li.dataset.key = overlapKey(event);
   if (members.length > 0) {
     li.style.setProperty('--card-tint', members[0].tint);
     li.style.setProperty('--card-stripe', members[0].color);
@@ -214,7 +241,9 @@ function renderEventCard(event) {
   const meta = document.createElement('p');
   meta.className = 'item-card__meta';
   meta.append(timeMeta(eventTimeText(event)), renderAssignees(members));
-  body.append(title, meta);
+  const flags = flagsRow();
+  if (event.source === 'google' && event.updated_from_google) flags.append(flagChip('updated')); // F32
+  body.append(title, meta, flags);
 
   const source = SOURCE_TAGS[event.source] ?? SOURCE_TAGS.homie;
   const tag = document.createElement('span');
@@ -305,6 +334,7 @@ function renderBoard(tasks, events) {
     ...tasks.map((t) => ({ ...t, kind: 'task' })),
   ];
   const isUntimed = (item) => (item.kind === 'event' ? !item.start_time : !item.time);
+  shownItems = items;
   const untimed = items.filter(isUntimed).sort(compareItems);
   const timed = items.filter((i) => !isUntimed(i)).sort(compareItems);
 
@@ -314,6 +344,7 @@ function renderBoard(tasks, events) {
   if (timed.length > 0) renderTimeline(timed);
   else el.timelineList.replaceChildren();
   el.timeline.hidden = timed.length === 0;
+  updateOverlapChips();
 
   if (focusItem) {
     const target = [...document.querySelectorAll('.item-card__open')]

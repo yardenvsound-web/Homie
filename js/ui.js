@@ -34,6 +34,8 @@ export const MESSAGES = {
   editTask: (title) => `עריכת משימה: ${title}`,
   editEvent: (title) => `עריכת אירוע: ${title}`,
   eventGone: 'האירוע כבר לא קיים',
+  overlap: 'חפיפה',
+  updatedFromGoogle: 'עודכן ב-Google',
 
   // Add menu and modals (Milestone 4)
   add: 'הוספה',
@@ -154,6 +156,23 @@ const ICON_PATHS = {
   sparkle: '<path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
   lock: '<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>',
 };
+
+// Display-only flag chips on a card (Milestone 8): icon + word, never color alone.
+// kind: 'overlap' (F10) | 'updated' (F32, "עודכן ב-Google").
+const FLAG_CHIPS = {
+  overlap: { icon: 'warning', label: () => MESSAGES.overlap },
+  updated: { icon: 'refresh', label: () => MESSAGES.updatedFromGoogle },
+};
+
+export function flagChip(kind) {
+  const chip = document.createElement('span');
+  chip.className = `chip chip--flag chip--${kind}`;
+  chip.dataset.flag = kind;
+  const text = document.createElement('span');
+  text.textContent = FLAG_CHIPS[kind].label();
+  chip.append(icon(FLAG_CHIPS[kind].icon), text);
+  return chip;
+}
 
 export function icon(name) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

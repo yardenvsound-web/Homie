@@ -421,3 +421,13 @@ You are the AI suggestion layer of Homie, a family responsibility management sys
 **החלטה:** `js/skeleton-nav.js` מוסיף לכל דף רשימת קישורים פשוטה (כולל "כניסה"), עם `aria-current` וקו תחתון לדף הנוכחי.
 **השלכות:** ב-Milestone 2 מוחקים את `js/skeleton-nav.js` ואת הסגנונות `.skeleton-nav` ב-`css/styles.css`, ומסירים את תג ה-`<script>` שלו מארבעת הדפים.
 
+
+### ADR-4: שורת בני בית זמנית עד Milestone 3
+**הקשר:** ה-Definition of Done של Milestone 2 דורש להציג את ארבעת בני הבית עם השם, הגוון והאווטאר, אבל לוח היום שמציג אותם בכרטיסים נבנה רק ב-Milestone 3.
+**החלטה:** בדף `index.html` נוספה שורה פשוטה "בני הבית" עם אווטאר ושם לכל בן בית, לפי הסדר ב-`members.json` (אושר 8.11.2026). תצוגה בלבד.
+**השלכות:** ב-Milestone 3 מוחקים את הקטע `.members-strip` מ-`index.html` ואת הסגנונות שלו ב-`css/styles.css`.
+
+### ADR-5: דגל לתמונות האווטאר
+**הקשר:** איורי האווטאר (`assets/avatars/m1.png`…`m4.png`) עוד לא קיימים. ניסיון לטעון אותם היה יוצר שגיאות 404 בכל דף.
+**החלטה:** `USE_AVATAR_IMAGES` ב-`js/config.js`, כרגע `false`. עד אז `renderAvatar` ב-`js/members.js` מציג עיגול בגוון בן הבית עם האות הראשונה.
+**השלכות:** כשהאיורים מגיעים, מוסיפים אותם ל-`assets/avatars/` ומשנים את הדגל ל-`true`. אין שינוי קוד נוסף.

@@ -12,11 +12,14 @@
     <!-- supabase-js v2, pinned exact version -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
     <script type="module" src="js/supabase.js"></script>
-    <script type="module" src="js/skeleton-nav.js"></script>
   </head>
-  <body>
+  <body class="is-loading">
     <main class="page">
       <h1 class="screen-title">רשימת קניות</h1>
     </main>
+    <script type="module">
+      import { initProtectedPage } from './js/nav.js';
+      initProtectedPage({ page: 'shopping', title: 'רשימת קניות' });
+    </script>
   </body>
 </html>

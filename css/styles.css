@@ -1,5 +1,6 @@
 /* Homie base styles. Mobile first (375px), RTL.
-   Uses only variables from tokens/tokens.css — no hard-coded values. */
+   Uses only variables from tokens/tokens.css — no hard-coded values.
+   Media queries cannot read CSS variables, so the 768px breakpoint is literal. */
 
 *,
 *::before,
@@ -20,11 +21,20 @@ body {
   min-height: 100vh;
 }
 
+/* Hidden until the session check finishes, so a signed-out visitor never sees the page */
+body.is-loading {
+  visibility: hidden;
+}
+
 h1,
 h2,
 h3,
 p {
   margin: 0;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 /* Keyboard focus ring on every interactive element */
@@ -35,10 +45,21 @@ select:focus-visible,
 textarea:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-  border-radius: var(--radius-s);
 }
 
-/* Page container */
+.icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--size-icon-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ---------- Page ---------- */
+
 .page {
   padding: var(--space-4) var(--space-screen-margin);
   display: flex;
@@ -76,42 +97,530 @@ textarea:focus-visible {
   color: var(--color-text-secondary);
 }
 
-/* Temporary skeleton navigation (Milestone 1 only, see js/skeleton-nav.js) */
-.skeleton-nav {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: 0 var(--space-screen-margin);
+.section-title {
+  font: var(--font-title-m);
 }
 
-.skeleton-nav ul {
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  font: var(--font-label);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.btn--primary:active {
+  background: var(--color-primary-pressed);
+}
+
+.btn--secondary {
+  background: var(--color-oat);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: default;
+}
+
+.btn--small {
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-3);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-xs);
+  padding: var(--space-4) var(--space-card-padding);
+}
+
+/* ---------- Fields ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: start;
+}
+
+.field__label {
+  font: var(--font-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.field__control {
+  position: relative;
+}
+
+.field__input {
+  width: 100%;
+  min-height: var(--size-button-height);
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-m);
+  font: var(--font-body);
+  font-family: var(--font-family);
+}
+
+/* Emails and passwords are typed left-to-right but stay aligned with the RTL layout */
+.field__input--ltr {
+  direction: ltr;
+  text-align: right;
+}
+
+.field__input:focus-visible {
+  border: var(--focus-field-border);
+  box-shadow: var(--focus-field-halo);
+}
+
+.field__control:has(.field__icon) .field__input {
+  padding-left: calc(var(--space-3) + var(--size-icon) + var(--space-2));
+}
+
+.field__icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.field__input[aria-invalid='true'] {
+  border: 2px solid var(--color-danger);
+}
+
+.field__error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: var(--font-caption);
+  color: var(--color-danger-text);
+}
+
+.field__error .icon {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+.form-error {
+  font: var(--font-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger-text);
+  background: var(--color-clay-light);
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-3);
+  text-align: start;
+}
+
+.form-error:empty {
+  display: none;
+}
+
+/* ---------- Login ---------- */
+
+.login {
+  gap: var(--space-2);
+}
+
+.login-card {
+  width: 100%;
+  max-width: calc(var(--space-6) * 8 + var(--space-3)); /* 400 */
+  margin-top: var(--space-5);
+  text-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.login-card__title {
+  font: var(--font-title-m);
+}
+
+.login-card__hint {
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.login-form .btn {
+  margin-top: var(--space-2);
+}
+
+/* ---------- Avatars ---------- */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--avatar-tint, var(--color-oat));
+  border: 1px solid var(--avatar-stripe, var(--color-border-field));
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar--unknown {
+  background: var(--color-oat);
+  border-color: var(--color-border-field);
+}
+
+.avatar--xs,
+.avatar--s {
+  font: var(--font-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.avatar--xs { width: var(--size-avatar-xs); height: var(--size-avatar-xs); }
+.avatar--s { width: var(--size-avatar-s); height: var(--size-avatar-s); }
+
+.avatar--m {
+  width: var(--size-avatar-m);
+  height: var(--size-avatar-m);
+  font: var(--font-title-m);
+}
+
+.avatar--l {
+  width: var(--size-avatar-l);
+  height: var(--size-avatar-l);
+  font: var(--font-title-l);
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: calc(var(--size-touch-target) + var(--space-3));
+  padding: 0 var(--space-screen-margin);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.topbar__title {
+  flex: 1;
+  font: var(--font-title-l);
+}
+
+.topbar__brand {
+  font: var(--font-label);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* Desktop links: hidden on phone */
+.topnav {
+  display: none;
+}
+
+/* ---------- Account (signed-in parent + sign out) ---------- */
+
+.account {
+  position: relative;
+}
+
+.account__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* Phone: dropdown menu */
+.account__panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  min-width: calc(var(--space-6) * 4); /* 192 */
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-soft);
+}
+
+.account.is-open .account__panel {
+  display: flex;
+}
+
+.account__who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.account__name {
+  font: var(--font-title-s);
+}
+
+.account__logout .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+/* ---------- Bottom bar (phone) ---------- */
+
+.bottomnav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottomnav__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  display: flex;
+}
+
+.bottomnav__list li {
+  flex: 1;
+}
+
+.bottomnav__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: calc(var(--size-touch-target) + var(--space-3));
+  padding: var(--space-1);
+  color: var(--color-text-secondary);
+  font: var(--font-caption);
+  text-decoration: none;
+  border-radius: var(--radius-m);
+}
+
+.bottomnav__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+}
+
+/* Active tab: color + background + weight, not color alone */
+.bottomnav__link[aria-current='page'] {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.bottomnav__link[aria-current='page'] .bottomnav__icon {
+  background: var(--color-sage-light);
+}
+
+/* Room for the fixed bottom bar */
+body:has(.bottomnav) {
+  padding-bottom: calc(var(--size-touch-target) + var(--space-5));
+}
+
+/* On phone the screen title lives in the top bar; keep the h1 for screen readers */
+body:has(.topbar) .page > .screen-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Error bar ---------- */
+
+.error-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-clay-light);
+  border-radius: var(--radius-l);
+}
+
+.error-bar__text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--font-label);
+  color: var(--color-danger-text);
+}
+
+/* ---------- Temporary members strip (until Milestone 3, ADR-4) ---------- */
+
+.members-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.members-strip__list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--space-3) var(--space-4);
 }
 
-.skeleton-nav a {
-  display: inline-flex;
+.members-strip__item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: var(--size-touch-target);
-  padding: 0 var(--space-1);
-  color: var(--color-primary);
-  font: var(--font-label);
-  text-decoration: none;
+  gap: var(--space-1);
 }
 
-/* Active link: underline + weight, not color alone */
-.skeleton-nav a[aria-current='page'] {
-  text-decoration: underline;
-  text-underline-offset: var(--space-1);
-  font-weight: var(--font-weight-bold);
-}
+/* ---------- Wider screens ---------- */
 
-/* Wider screens (media queries cannot read CSS variables, so the breakpoint is literal) */
 @media (min-width: 768px) {
   .page {
     padding-top: var(--space-5);
+  }
+
+  .topbar__title {
+    display: none;
+  }
+
+  .topbar__brand {
+    font: var(--font-title-m);
+  }
+
+  .topnav {
+    display: block;
+    flex: 1;
+    align-self: stretch;
+  }
+
+  .topnav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .topnav__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 100%;
+    min-height: var(--size-touch-target);
+    padding: 0 var(--space-1);
+    color: var(--color-text-secondary);
+    font: var(--font-caption);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .topnav__link .icon {
+    width: var(--space-4);
+    height: var(--space-4);
+  }
+
+  /* Active link: underline + color, not color alone */
+  .topnav__link[aria-current='page'] {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+
+  .account__toggle {
+    display: none;
+  }
+
+  .account__panel {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .account__name {
+    font: var(--font-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .bottomnav {
+    display: none;
+  }
+
+  body:has(.bottomnav) {
+    padding-bottom: 0;
+  }
+
+  body:has(.topbar) .page > .screen-title {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }

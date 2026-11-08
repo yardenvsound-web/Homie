@@ -12,13 +12,113 @@
     <!-- supabase-js v2, pinned exact version -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
     <script type="module" src="js/supabase.js"></script>
-    <script type="module" src="js/skeleton-nav.js"></script>
   </head>
-  <body>
-    <main class="page page--center">
+  <body class="is-loading">
+    <main class="page page--center login">
       <h1 class="brand">Homie</h1>
       <p class="tagline">מה מתכננים להיום?</p>
       <p class="tagline-sub">פחות דיבורים ויותר זמן ביחד</p>
+
+      <section class="card login-card" aria-labelledby="login-title">
+        <h2 class="login-card__title" id="login-title">כניסה</h2>
+        <p class="login-card__hint">כניסה להורים בלבד</p>
+
+        <form class="login-form" novalidate>
+          <div class="field">
+            <label class="field__label" for="email">אימייל</label>
+            <div class="field__control">
+              <input class="field__input field__input--ltr" id="email" name="email" type="email"
+                     autocomplete="username" inputmode="email" aria-describedby="email-error">
+              <svg class="icon field__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.2-3.6 4.2-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/>
+              </svg>
+            </div>
+            <p class="field__error" id="email-error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="password">סיסמה</label>
+            <div class="field__control">
+              <input class="field__input field__input--ltr" id="password" name="password" type="password"
+                     autocomplete="current-password" aria-describedby="password-error">
+            </div>
+            <p class="field__error" id="password-error" hidden></p>
+          </div>
+
+          <p class="form-error" id="login-error" role="alert"></p>
+
+          <button class="btn btn--primary btn--block" type="submit">כניסה</button>
+        </form>
+      </section>
     </main>
+
+    <script type="module">
+      import { getSession, signIn } from './js/auth.js';
+      import { MESSAGES, icon } from './js/ui.js';
+
+      // Already signed in (e.g. the family tablet): go straight to the board.
+      if (await getSession()) {
+        window.location.replace('index.html');
+      } else {
+        document.body.classList.remove('is-loading');
+      }
+
+      const form = document.querySelector('.login-form');
+      const email = form.querySelector('#email');
+      const password = form.querySelector('#password');
+      const submit = form.querySelector('button[type="submit"]');
+      const formError = form.querySelector('#login-error');
+
+      function setFieldError(input, message) {
+        const error = document.getElementById(`${input.id}-error`);
+        if (message) {
+          input.setAttribute('aria-invalid', 'true');
+          error.replaceChildren(icon('warning'), document.createTextNode(message));
+          error.hidden = false;
+        } else {
+          input.removeAttribute('aria-invalid');
+          error.replaceChildren();
+          error.hidden = true;
+        }
+      }
+
+      for (const input of [email, password]) {
+        input.addEventListener('input', () => setFieldError(input, null));
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        formError.textContent = '';
+
+        const emailValue = email.value.trim();
+        const passwordValue = password.value;
+        setFieldError(email, emailValue ? null : MESSAGES.emailRequired);
+        setFieldError(password, passwordValue ? null : MESSAGES.passwordRequired);
+        const firstInvalid = form.querySelector('[aria-invalid="true"]');
+        if (firstInvalid) {
+          firstInvalid.focus();
+          return;
+        }
+
+        submit.disabled = true;
+        submit.textContent = MESSAGES.signingIn;
+
+        const result = await signIn(emailValue, passwordValue);
+        if (result.ok) {
+          window.location.replace('index.html');
+          return;
+        }
+
+        submit.disabled = false;
+        submit.textContent = MESSAGES.signIn;
+        if (result.reason === 'credentials') {
+          formError.textContent = MESSAGES.loginBadCredentials;
+          password.value = '';
+          password.focus();
+        } else {
+          formError.textContent = MESSAGES.loginNetwork;
+        }
+      });
+    </script>
   </body>
 </html>

@@ -12,12 +12,15 @@
     <!-- supabase-js v2, pinned exact version -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
     <script type="module" src="js/supabase.js"></script>
-    <script type="module" src="js/skeleton-nav.js"></script>
   </head>
-  <body>
+  <body class="is-loading">
     <main class="page">
       <h1 class="screen-title">ממתין לאישור</h1>
       <p class="screen-subtitle">פריטים שממתינים לפעולת הורה</p>
     </main>
+    <script type="module">
+      import { initProtectedPage } from './js/nav.js';
+      initProtectedPage({ page: 'pending', title: 'ממתין לאישור' });
+    </script>
   </body>
 </html>

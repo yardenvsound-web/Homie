@@ -12,11 +12,37 @@
     <!-- supabase-js v2, pinned exact version -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
     <script type="module" src="js/supabase.js"></script>
-    <script type="module" src="js/skeleton-nav.js"></script>
   </head>
-  <body>
+  <body class="is-loading">
     <main class="page">
       <h1 class="screen-title">לוח היום</h1>
+      <!-- TEMPORARY until Milestone 3 (ADR-4): shows the household members. -->
+      <section class="members-strip" aria-labelledby="members-title" hidden>
+        <h2 class="section-title" id="members-title">בני הבית</h2>
+        <ul class="members-strip__list"></ul>
+      </section>
     </main>
+    <script type="module">
+      import { initProtectedPage } from './js/nav.js';
+      import { renderAvatar } from './js/members.js';
+
+      // TEMPORARY until Milestone 3 (ADR-4).
+      function renderMembersStrip(members) {
+        const section = document.querySelector('.members-strip');
+        const list = section.querySelector('.members-strip__list');
+        list.replaceChildren();
+        for (const member of members) {
+          const li = document.createElement('li');
+          li.className = 'members-strip__item';
+          const name = document.createElement('span');
+          name.textContent = member.name;
+          li.append(renderAvatar(member, 'm'), name);
+          list.append(li);
+        }
+        section.hidden = false;
+      }
+
+      initProtectedPage({ page: 'index', title: 'לוח היום', onReady: renderMembersStrip });
+    </script>
   </body>
 </html>

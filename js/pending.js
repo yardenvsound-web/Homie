@@ -165,7 +165,7 @@ function renderSuggestionCard(task) {
 
   const actions = document.createElement('div');
   actions.className = 'pending-card__actions pending-card__actions--split';
-  const approve = button('btn--primary btn--small', MESSAGES.approve, 'check', MESSAGES.approveSuggestion(task.title));
+  const approve = button('btn--success btn--small', MESSAGES.approve, 'check', MESSAGES.approveSuggestion(task.title));
   const reject = button('btn--secondary btn--small', MESSAGES.reject, 'close', MESSAGES.rejectSuggestion(task.title));
   actions.append(approve, reject);
 

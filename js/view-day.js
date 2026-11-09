@@ -18,7 +18,7 @@ function column({ id, name, member, items, onStatusSaved }) {
 
   const head = document.createElement('div');
   head.className = 'day-col__head';
-  if (member) head.append(renderAvatar(member, 'm'));
+  if (member) head.append(renderAvatar(member, 'xl'));
   const title = document.createElement('h2');
   title.className = 'day-col__name';
   title.id = `day-col-${id}`;

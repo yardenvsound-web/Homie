@@ -149,7 +149,9 @@ function flagsRow() {
 function statusChip(status) {
   const chip = document.createElement('span');
   chip.className = `chip chip--${status}`;
-  chip.textContent = STATUS_LABELS[status];
+  const text = document.createElement('span');
+  text.textContent = STATUS_LABELS[status];
+  chip.append(icon(status === 'done' ? 'check' : 'circle'), text);
   return chip;
 }
 
@@ -165,8 +167,6 @@ function renderTaskCard(task, ownerId, onSaved) {
   li.className = 'item-card item-card--task';
   li.dataset.key = overlapKey(task);
   if (ownerId) li.dataset.owner = ownerId;
-  // Checked color: the single assignee's stripe, otherwise sage (the CSS default).
-  if (members.length === 1) li.style.setProperty('--check-color', members[0].color);
 
   // Real checkbox over a 44×44 touch area; the visible 24×24 box is drawn next to it.
   const check = document.createElement('span');
@@ -203,6 +203,7 @@ function renderTaskCard(task, ownerId, onSaved) {
   body.append(title, meta, flagsRow());
 
   let chip = statusChip(task.status);
+  meta.append(chip);
 
   function show(status) {
     checkbox.checked = status === 'done';
@@ -247,7 +248,7 @@ function renderTaskCard(task, ownerId, onSaved) {
     }
   });
 
-  li.append(check, body, chip);
+  li.append(check, body);
   return li;
 }
 
@@ -296,13 +297,19 @@ function renderEventCard(event, ownerId) {
   const meta = document.createElement('p');
   meta.className = 'item-card__meta';
   meta.append(timeMeta(eventTimeText(event)));
+  meta.append(sourceTag(event.source));
   const who = renderAssignees(members, ownerId);
   if (who) meta.append(who);
   const flags = flagsRow();
   if (event.source === 'google' && isRecentGoogleUpdate(event)) flags.append(flagChip('updated')); // F32, F50
   body.append(title, meta, flags);
 
-  li.append(body, sourceTag(event.source));
+  // Icon by type (DESIGN.md): a calendar tile marks every event card.
+  const tile = document.createElement('span');
+  tile.className = 'icon-tile icon-tile--event';
+  tile.setAttribute('aria-hidden', 'true');
+  tile.append(icon('calendar'));
+  li.append(tile, body);
   return li;
 }
 

@@ -26,7 +26,7 @@ export function findParentByUserId(userId) {
   return getMembers().find((m) => m.is_parent && m.supabase_user_id === userId) ?? null;
 }
 
-// Avatar circle. size: 'xs' | 's' | 'm' | 'l' (24 / 32 / 48 / 72).
+// Avatar circle. size: 'xs' | 's' | 'm' | 'xl' | 'l' (24 / 32 / 48 / 56 / 72).
 // Decorative (aria-hidden): the member's name is always shown next to it as text.
 // Pass null for an unknown person: a neutral circle with the given letter.
 export function renderAvatar(member, size = 's', fallbackLetter = '?') {
@@ -56,8 +56,9 @@ export function renderAvatar(member, size = 's', fallbackLetter = '?') {
 }
 
 // Multi-select of household members (DESIGN.md "בוחר בני בית"), in members.json
-// order. Each chip is a real checkbox + avatar + name, so the selection is never
-// shown by color alone. getSelected() returns ids in members.json order.
+// order. Each option is a label with a big avatar and the name under it; the real
+// checkbox is the badge on the avatar (ring + check + bold name when selected),
+// so the selection is never shown by color alone. getSelected() returns ids in members.json order.
 // onChange(selectedIds) runs whenever a chip is checked or unchecked.
 export function renderMemberPicker({ id, legend, selectedIds = [], onChange = null }) {
   const selected = new Set(selectedIds);
@@ -73,7 +74,6 @@ export function renderMemberPicker({ id, legend, selectedIds = [], onChange = nu
   for (const member of getMembers()) {
     const label = document.createElement('label');
     label.className = 'member-chip';
-    label.style.setProperty('--chip-tint', member.tint);
 
     const check = document.createElement('span');
     check.className = 'check';
@@ -89,9 +89,12 @@ export function renderMemberPicker({ id, legend, selectedIds = [], onChange = nu
     box.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
     check.append(input, box);
 
+    const avatarWrap = document.createElement('span');
+    avatarWrap.className = 'member-chip__avatar';
+    avatarWrap.append(renderAvatar(member, 'xl'), check);
     const name = document.createElement('span');
     name.textContent = member.name;
-    label.append(check, renderAvatar(member, 'xs'), name);
+    label.append(avatarWrap, name);
     list.append(label);
     inputs.push(input);
   }

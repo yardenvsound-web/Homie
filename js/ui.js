@@ -167,6 +167,7 @@ const ICON_PATHS = {
   'chevron-left': '<path d="M15 5l-7 7 7 7"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  circle: '<circle cx="12" cy="12" r="7.5"/>',
   plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
   close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',
   trash: '<path d="M4 7h16"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v5.5"/><path d="M14 11v5.5"/>',
@@ -364,7 +365,8 @@ function iconButton(name, label) {
 // behind is inert). Clicking the backdrop does not close it, so typed data is kept.
 // onSubmit() runs on "save" / Enter; return true to close.
 // fallbackFocus: where focus goes if the opener no longer exists (e.g. a deleted card).
-export function createModal({ title, primaryLabel, opener = null, fallbackFocus = null, onSubmit }) {
+// icon: optional ICON_PATHS name shown in a round tile before the title (mockup-v2).
+export function createModal({ title, primaryLabel, icon: iconName = null, opener = null, fallbackFocus = null, onSubmit }) {
   const id = `modal-${++modalSeq}`;
   const dialog = document.createElement('dialog');
   dialog.className = 'modal';
@@ -381,6 +383,12 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
   heading.id = `${id}-title`;
   heading.textContent = title;
   const closeBtn = iconButton('close', MESSAGES.close);
+  if (iconName) {
+    const tile = document.createElement('span');
+    tile.className = 'modal__icon';
+    tile.append(icon(iconName));
+    header.append(tile);
+  }
   header.append(heading, closeBtn);
 
   const body = document.createElement('div');
@@ -394,10 +402,13 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
   const primary = document.createElement('button');
   primary.type = 'submit';
   primary.className = 'btn btn--primary';
-  primary.textContent = primaryLabel;
+  // The label lives in its own span, so setBusy() can change it without removing the icon.
+  const primaryText = document.createElement('span');
+  primaryText.textContent = primaryLabel;
+  primary.append(icon('check'), primaryText);
   const cancel = document.createElement('button');
   cancel.type = 'button';
-  cancel.className = 'btn btn--secondary';
+  cancel.className = 'btn btn--quiet';
   cancel.textContent = MESSAGES.cancel;
   footer.append(primary, cancel);
 
@@ -414,7 +425,7 @@ export function createModal({ title, primaryLabel, opener = null, fallbackFocus 
     for (const c of controls) c.disabled = value;
     primary.disabled = value || !primaryEnabled;
     for (const extra of footer.querySelectorAll('[data-modal-extra]')) extra.disabled = value;
-    primary.textContent = value ? label : primaryLabel;
+    primaryText.textContent = value ? label : primaryLabel;
     dialog.setAttribute('aria-busy', String(value));
   }
 

@@ -80,8 +80,8 @@ function renderBlock(item, { compact, onMove }) {
 
   const title = document.createElement('span');
   title.className = 'week-block__title';
-  if (item.kind === 'event' && item.source === 'google') title.append(icon('calendar'));
-  if (done) title.append(icon('check'));
+  // Icon by type (DESIGN.md): task or event; a done task shows a check instead.
+  title.append(icon(done ? 'check' : item.kind === 'task' ? 'task' : 'calendar'));
   const titleText = document.createElement('span');
   titleText.textContent = item.title;
   title.append(titleText);

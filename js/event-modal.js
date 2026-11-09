@@ -73,6 +73,7 @@ export function openEventModal({ event = null, date, opener, fallbackFocus, onSa
 
   const modal = createModal({
     title: editing ? MESSAGES.editEventTitle : MESSAGES.newEventTitle,
+    icon: 'calendar',
     primaryLabel: editing ? MESSAGES.saveChanges : MESSAGES.save,
     opener,
     fallbackFocus,
@@ -167,6 +168,7 @@ export function openGoogleApproveModal({ event, opener, fallbackFocus, onDone })
 
   const modal = createModal({
     title: MESSAGES.googleApproveTitle,
+    icon: 'calendar',
     primaryLabel: MESSAGES.approveAssign,
     opener,
     fallbackFocus,

@@ -73,6 +73,7 @@ export function openTaskModal({ task = null, date, opener, fallbackFocus, onSave
 
   const modal = createModal({
     title: editing ? MESSAGES.editTaskTitle : MESSAGES.newTaskTitle,
+    icon: 'task',
     primaryLabel: editing ? MESSAGES.saveChanges : MESSAGES.save,
     opener,
     fallbackFocus,

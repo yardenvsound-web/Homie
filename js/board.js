@@ -50,7 +50,11 @@ const VIEWS = {
 };
 
 // In memory only: a page reload always opens the daily view on today (F42, F51).
-let view = 'day';
+// Exception: the welcome page links here with ?view=week|month to open that view
+// once; the parameter is removed right away so a reload still opens the daily view.
+const requestedView = new URLSearchParams(window.location.search).get('view');
+let view = Object.hasOwn(VIEWS, requestedView) ? requestedView : 'day';
+if (requestedView) history.replaceState(null, '', window.location.pathname);
 let selectedDate = todayISO();
 let loadSeq = 0;
 // Edited item whose card gets focus back once the board has re-rendered (ADR-8).
@@ -318,6 +322,7 @@ function initViewMenu() {
   const label = VIEWS[view].label;
   text.textContent = label;
   el.viewToggle.setAttribute('aria-label', MESSAGES.viewMenu(label));
+  for (const item of items) item.setAttribute('aria-checked', String(item.dataset.view === view));
   el.content.dataset.view = view;
 }
 

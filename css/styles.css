@@ -2666,3 +2666,121 @@ body.is-dragging,
 body.is-dragging * {
   cursor: grabbing !important;
 }
+
+/* ---------- Welcome (entry screen) ---------- */
+
+.welcome {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: calc(var(--space-5) + env(safe-area-inset-top)) var(--space-screen-margin)
+           calc(var(--space-5) + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.welcome__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.welcome__logo {
+  display: block;
+  width: 112px;
+  height: auto;
+  margin-bottom: var(--space-2);
+}
+
+.welcome__title {
+  font: var(--font-display);
+  color: var(--color-primary);
+}
+
+.welcome__sub {
+  font: var(--font-body);
+  color: var(--color-text-secondary);
+  max-width: 42ch;
+  text-wrap: balance;
+}
+
+.welcome__nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-card-gap);
+  width: 100%;
+  max-width: calc(var(--space-6) * 7); /* 336 */
+  margin-top: var(--space-3);
+}
+
+.welcome__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: calc(var(--space-6) * 2); /* 96 */
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-xs);
+  color: var(--color-primary);
+  font: var(--font-label);
+  font-family: var(--font-family);
+  text-decoration: none;
+}
+
+.welcome__tile:hover {
+  border-color: var(--color-primary);
+}
+
+.welcome__tile:active {
+  background: var(--color-primary-light);
+}
+
+.welcome__tile .icon {
+  width: calc(var(--size-icon) * 1.4);
+  height: calc(var(--size-icon) * 1.4);
+}
+
+.welcome__hero {
+  margin: 0;
+  width: 100%;
+  max-width: 640px;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.welcome__hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Tablet and desktop: text beside the picture */
+@media (min-width: 768px) {
+  .welcome {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-6);
+    padding-inline: var(--space-screen-margin-wide);
+  }
+
+  .welcome__text {
+    flex: 0 1 360px;
+  }
+
+  .welcome__logo {
+    width: 140px;
+  }
+
+  .welcome__hero {
+    flex: 1 1 0;
+    max-width: 720px;
+  }
+}

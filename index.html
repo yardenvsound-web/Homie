@@ -2,6 +2,14 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8">
+    <script>
+      // Entry screen: arriving from outside the app (typed URL, bookmark, home-screen
+      // icon, shared link) starts at welcome.html. Moving between app pages
+      // (same-origin referrer) goes straight to the board.
+      let fromApp = false;
+      try { fromApp = new URL(document.referrer).origin === location.origin; } catch (e) { /* no referrer */ }
+      if (!fromApp) window.location.replace('welcome.html');
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>לוח היום · Homie</title>
     <link rel="icon" type="image/png" href="img/favicon.png">

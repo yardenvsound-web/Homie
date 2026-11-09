@@ -6,7 +6,7 @@ import { getMembers, renderAvatar } from './members.js';
 import { addDays, todayISO, weekdayLetter, dayOfMonth, formatDayLabel } from './time.js';
 import { MESSAGES, STATUS_LABELS, icon } from './ui.js';
 import {
-  assignedMembers, compareItems, isUntimed, startMinutes, endMinutes, hourRange, itemTimeText, openItem,
+  renderItemCard, assignedMembers, compareItems, isUntimed, startMinutes, endMinutes, hourRange, itemTimeText, openItem,
 } from './cards.js';
 import { makeDraggable } from './week-drag.js';
 
@@ -126,23 +126,61 @@ function renderLegend() {
   return list;
 }
 
-// from: Sunday of the shown week. onOpenDay(date) switches to the daily view.
-// onMove(item, changes) saves a drag-and-drop move (week-drag.js).
-export function renderWeek(container, items, { from, onOpenDay, onMove }) {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(from, i));
-  const today = todayISO();
-  const [first, last] = hourRange(items);
+// Phone (Milestone 12): a list by day instead of the table. Same cards as the
+// daily view, untimed first, then by time. No drag and drop here (DESIGN.md).
+function renderWeekList(days, items, { today, onOpenDay, onStatusSaved }) {
+  const list = document.createElement('div');
+  list.className = 'week-list';
+  for (const day of days) {
+    const section = document.createElement('section');
+    section.className = 'week-list__section';
+    const isToday = day === today;
+    if (isToday) section.classList.add('week-list__section--today');
 
-  const wrap = document.createElement('div');
-  wrap.className = 'week';
+    const heading = document.createElement('h2');
+    heading.className = 'week-list__heading';
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'week-list__day';
+    head.setAttribute('aria-label', MESSAGES.openDay(formatDayLabel(day)));
+    if (isToday) head.setAttribute('aria-current', 'date');
+    const num = document.createElement('span');
+    num.className = 'week-list__num';
+    num.setAttribute('aria-hidden', 'true');
+    num.textContent = String(dayOfMonth(day));
+    const label = document.createElement('span');
+    label.textContent = formatDayLabel(day);
+    head.append(num, label);
+    if (isToday) {
+      const mark = document.createElement('span');
+      mark.className = 'week-list__today';
+      mark.textContent = MESSAGES.today;
+      head.append(mark);
+    }
+    head.addEventListener('click', () => onOpenDay(day));
+    heading.append(head);
+    section.append(heading);
 
-  if (items.length === 0) {
-    const note = document.createElement('p');
-    note.className = 'view-note';
-    note.textContent = MESSAGES.emptyWeek;
-    wrap.append(note);
+    const dayItems = items.filter((i) => i.date === day).sort(compareItems);
+    if (dayItems.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'week-list__empty';
+      empty.textContent = MESSAGES.dayEmpty;
+      section.append(empty);
+    } else {
+      const ul = document.createElement('ul');
+      ul.className = 'week-list__items';
+      for (const item of dayItems) ul.append(renderItemCard(item, { onStatusSaved }));
+      section.append(ul);
+    }
+    list.append(section);
   }
+  return list;
+}
 
+// The table (desktop / tablet): header row, "ללא שעה" row and hour columns.
+function renderGrid(days, items, { today, onOpenDay, onMove }) {
+  const [first, last] = hourRange(items);
   const scroller = document.createElement('div');
   scroller.className = 'week__scroller';
   const grid = document.createElement('div');
@@ -225,7 +263,37 @@ export function renderWeek(container, items, { from, onOpenDay, onMove }) {
   }
 
   scroller.append(grid);
-  wrap.append(renderLegend(), scroller);
+  return scroller;
+}
+
+// from: Sunday of the shown week. onOpenDay(date) switches to the daily view.
+// onMove(item, changes) saves a drag-and-drop move (week-drag.js).
+// Both the table and the phone list are built; CSS shows one by screen width (ADR-22).
+export function renderWeek(container, items, { from, onOpenDay, onMove }) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(from, i));
+  const today = todayISO();
+
+  const wrap = document.createElement('div');
+  wrap.className = 'week';
+
+  if (items.length === 0) {
+    const note = document.createElement('p');
+    note.className = 'view-note';
+    note.textContent = MESSAGES.emptyWeek;
+    wrap.append(note);
+  }
+
+  let grid = renderGrid(days, items, { today, onOpenDay, onMove });
+  // A status change in the list (the card updates the item itself) redraws the
+  // hidden table, so it is up to date when the screen gets wider.
+  const onStatusSaved = () => {
+    const fresh = renderGrid(days, items, { today, onOpenDay, onMove });
+    grid.replaceWith(fresh);
+    grid = fresh;
+  };
+  const list = renderWeekList(days, items, { today, onOpenDay, onStatusSaved });
+
+  wrap.append(renderLegend(), grid, list);
   container.replaceChildren(wrap);
   return true;
 }

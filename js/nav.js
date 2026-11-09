@@ -172,6 +172,9 @@ export function renderNav({ page, title, parent = null, parentKnown = true, onRe
 
   const header = document.createElement('header');
   header.className = 'topbar';
+  // Board: the view button already names the screen, so the phone top bar shows
+  // only the logo and the avatar (DESIGN.md, Milestone 12).
+  if (page === 'index') header.classList.add('topbar--board');
 
   // Phone only: the screen title sits in the top bar (decorative copy of the page h1).
   const titleEl = document.createElement('span');

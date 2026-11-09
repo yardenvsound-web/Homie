@@ -274,6 +274,8 @@ textarea:focus-visible {
 
 .login {
   gap: var(--space-2);
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
 }
 
 .login-card {
@@ -371,7 +373,8 @@ textarea:focus-visible {
   align-items: center;
   gap: var(--space-3);
   min-height: calc(var(--size-touch-target) + var(--space-3));
-  padding: 0 var(--space-screen-margin);
+  /* Full screen from the home screen (Milestone 12): stay below the Dynamic Island */
+  padding: env(safe-area-inset-top) max(var(--space-screen-margin), env(safe-area-inset-right)) 0 max(var(--space-screen-margin), env(safe-area-inset-left));
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-xs);
@@ -397,6 +400,14 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+.topbar--board .topbar__title {
+  display: none;
+}
+
+.topbar--board .topbar__brand {
+  flex: 1;
 }
 
 .topbar__logo {
@@ -523,7 +534,7 @@ textarea:focus-visible {
 
 /* Room for the fixed bottom bar */
 body:has(.bottomnav) {
-  padding-bottom: calc(var(--size-touch-target) + var(--space-5));
+  padding-bottom: calc(var(--size-touch-target) + var(--space-5) + env(safe-area-inset-bottom));
 }
 
 /* On phone the screen title lives in the top bar; keep the h1 for screen readers */
@@ -615,10 +626,16 @@ body:has(.topbar) .page .screen-title {
 
 .daybar {
   display: flex;
-  flex-wrap: wrap; /* phone: "עודכן לאחרונה" + refresh wrap when "היום" is shown */
   align-items: center;
-  gap: 0 var(--space-1);
+  gap: var(--space-1);
   margin-inline: calc(var(--space-2) * -1);
+}
+
+/* Date, with "עודכן לאחרונה" on a small line under it (phone, Milestone 12) */
+.daybar__center {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .daybar__date {
@@ -626,13 +643,6 @@ body:has(.topbar) .page .screen-title {
   white-space: nowrap;
 }
 
-/* "עודכן לאחרונה" + refresh stay together and wrap as one group */
-.daybar__sync {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-inline-start: auto;
-}
 
 .board__alerts:empty {
   display: none;
@@ -1016,9 +1026,16 @@ body:has(.topbar) .page .screen-title {
 
 /* ---------- Board head + add menu ---------- */
 
-/* Phone: the title is screen-reader only and the + button is fixed, so the head
-   takes no space (no extra gap above the day bar). Wider: title + "הוספה ▾" row. */
-.board__head,
+/* Row 1 of the board top area: view menu + refresh (phone, Milestone 12).
+   The title is screen-reader only and the + button is fixed, so .add takes no
+   space on phone. Wider: view menu + "הוספה ▾", refresh is in the top bar. */
+.board__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .add {
   display: contents;
 }
@@ -1113,8 +1130,8 @@ body:has(.topbar) .page .screen-title {
 .modal {
   width: calc(100% - 2 * var(--space-3));
   max-width: calc(var(--space-6) * 11 + var(--space-3) * 2); /* 560 */
-  max-height: calc(100dvh - 2 * var(--space-3));
-  margin: var(--space-3) auto auto; /* phone: pinned to the top */
+  max-height: calc(100dvh - 2 * var(--space-3) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  margin: calc(var(--space-3) + env(safe-area-inset-top)) auto auto; /* phone: pinned to the top */
   padding: 0;
   border: 0;
   border-radius: var(--radius-2xl);
@@ -1196,13 +1213,16 @@ body:has(.topbar) .page .screen-title {
   flex: 1;
 }
 
-/* Delete on the far side, away from "save" */
-.modal__delete {
-  margin-inline-start: auto;
+/* Phone (Milestone 12): "מחיקה" gets its own row under "שמירה" and "ביטול",
+   so the buttons never overflow the modal. Wider: on the far side from "save". */
+.modal__footer:has(.modal__delete) {
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 
-.modal__footer:has(.modal__delete) {
-  gap: var(--space-1);
+.modal__delete {
+  flex-basis: 100%;
+  justify-content: center;
 }
 
 .modal__footer:has(.modal__delete) .btn--primary {
@@ -1423,21 +1443,16 @@ body:has(.topbar) .page .screen-title {
   background: var(--dot-color, var(--color-border-field));
 }
 
-/* Daily view (F52): one column per member; on phone they scroll sideways */
+/* Daily view (F52): one column per member. Phone (Milestone 12): members are
+   stacked full width with a short one-line head; wider screens put them side by side. */
 .day-cols {
   display: flex;
+  flex-direction: column;
   gap: var(--space-3);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: var(--space-screen-margin);
-  margin-inline: calc(var(--space-screen-margin) * -1);
-  padding: 0 var(--space-screen-margin) var(--space-2);
 }
 
 .day-col {
-  flex: 0 0 85%;
   min-width: 0;
-  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -1448,15 +1463,34 @@ body:has(.topbar) .page .screen-title {
   border-radius: var(--radius-xl);
 }
 
-/* Head in the member's full color: avatar in a white ring, name on a white pill
-   (view-daily.webp). The name is dark text on white, so it stays readable. */
+/* Head in the member's full color. Phone: one row – avatar 32, name, count.
+   Wider: avatar in a white ring above the name (view-daily.webp). The name is
+   dark text on a white pill, so it stays readable on every member color. */
 .day-col__head {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-3) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background: var(--col-stripe, var(--color-surface-soft));
+}
+
+.day-col__head .avatar {
+  width: var(--size-avatar-s);
+  height: var(--size-avatar-s);
+  font: var(--font-label);
+  border-color: var(--color-surface);
+}
+
+/* Number of items, on a white pill (dark text on white) */
+.day-col__count {
+  margin-inline-start: auto;
+  min-width: var(--size-avatar-xs);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--font-label);
+  text-align: center;
 }
 
 .day-col__head .avatar {
@@ -1506,6 +1540,87 @@ body:has(.topbar) .page .screen-title {
 }
 
 /* Weekly view (F21) */
+/* Phone (Milestone 12): list by day; the table and legend appear from 768px */
+.week__scroller,
+.week .legend {
+  display: none;
+}
+
+.week-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.week-list__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.week-list__heading {
+  margin: 0;
+  font: inherit;
+}
+
+/* Day heading: a button that opens the day in the daily view */
+.week-list__day {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-touch-target);
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text);
+  font: var(--font-title-s);
+  font-family: var(--font-family-heading);
+  cursor: pointer;
+}
+
+.week-list__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-avatar-s);
+  height: var(--size-avatar-s);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* Today: number in a navy circle + the word "היום" (not color alone) */
+.week-list__section--today .week-list__num {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.week-list__today {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font: var(--font-caption-xs);
+}
+
+.week-list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.week-list__empty {
+  margin: 0;
+  padding: 0 var(--space-2);
+  font: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
 .week {
   display: flex;
   flex-direction: column;
@@ -2228,6 +2343,10 @@ button.week-block:focus-visible {
     font: var(--font-title-m);
   }
 
+  .topbar--board .topbar__brand {
+    flex: none;
+  }
+
   .topnav {
     display: block;
     flex: 1;
@@ -2307,7 +2426,8 @@ button.week-block:focus-visible {
     display: inline;
   }
 
-  .daybar__sync,
+  .daybar__refresh,
+  .daybar__updated:not([hidden]),
   .shopping__updated:not([hidden]),
   .pending__updated:not([hidden]) {
     display: none;
@@ -2355,6 +2475,15 @@ button.week-block:focus-visible {
 
   .modal {
     margin: auto; /* centered */
+  }
+
+  .modal__footer:has(.modal__delete) {
+    flex-wrap: nowrap;
+  }
+
+  .modal__delete {
+    flex-basis: auto;
+    margin-inline-start: auto;
   }
 
   body:has(.topbar) .page .screen-title {
@@ -2421,14 +2550,32 @@ button.week-block:focus-visible {
 
   /* Side by side; a narrow tablet still scrolls rather than squeezing the cards */
   .day-cols {
-    margin-inline: 0;
+    flex-direction: row;
+    overflow-x: auto;
     padding: 0 0 var(--space-2);
-    scroll-padding-inline: 0;
   }
 
   .day-col {
     flex: 1 1 0;
     min-width: calc(var(--space-6) * 5); /* 240 */
+  }
+
+  /* Tall head: avatar xl in a white ring above the name, no count */
+  .day-col__head {
+    flex-direction: column;
+    padding: var(--space-3);
+  }
+
+  .day-col__head .avatar {
+    width: var(--size-avatar-xl);
+    height: var(--size-avatar-xl);
+    font: var(--font-title-m);
+    border: 3px solid var(--color-surface);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .day-col__count {
+    display: none;
   }
 
   .week {
@@ -2442,8 +2589,17 @@ button.week-block:focus-visible {
   }
 
   .week__scroller {
+    display: block;
     flex: 1;
     min-width: 0;
+  }
+
+  .week .legend {
+    display: flex;
+  }
+
+  .week-list {
+    display: none;
   }
 
   /* Legend on the side (left in RTL) */

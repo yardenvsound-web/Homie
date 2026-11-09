@@ -23,7 +23,12 @@ function column({ id, name, member, items, onStatusSaved }) {
   title.className = 'day-col__name';
   title.id = `day-col-${id}`;
   title.textContent = name;
-  head.append(title);
+  // Item count: shown in the short phone head only (DESIGN.md, Milestone 12)
+  const count = document.createElement('span');
+  count.className = 'day-col__count';
+  count.textContent = String(items.length);
+  count.setAttribute('aria-label', MESSAGES.itemCount(items.length));
+  head.append(title, count);
   section.append(head);
 
   if (items.length === 0) {

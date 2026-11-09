@@ -1,0 +1,14 @@
+{
+  "name": "Homie",
+  "short_name": "Homie",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "he",
+  "background_color": "#F7F3EA",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "img/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

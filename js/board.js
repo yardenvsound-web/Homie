@@ -116,8 +116,9 @@ function renderBoard(tasks, events) {
   el.empty.hidden = hasContent;
 
   if (focusItem) {
+    // The weekly view builds the table and the phone list (ADR-22): only a visible copy can take focus.
     const target = [...el.view.querySelectorAll('button[data-kind][data-id]')]
-      .find((b) => b.dataset.kind === focusItem.kind && b.dataset.id === focusItem.id);
+      .find((b) => b.dataset.kind === focusItem.kind && b.dataset.id === focusItem.id && b.offsetParent !== null);
     (target ?? visibleToggle()).focus();
     focusItem = null;
   }

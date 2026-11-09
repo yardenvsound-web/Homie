@@ -2,10 +2,18 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>לוח היום · Homie</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <!-- Full screen when saved to the home screen (Milestone 12) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Homie">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <!-- Same value as --color-surface in tokens/tokens.css (white top bar) -->
+    <meta name="theme-color" content="#FFFFFF">
     <!-- Link preview (WhatsApp etc.): image URL must be absolute -->
     <meta name="description" content="מה מתכננים להיום? פחות דיבורים ויותר זמן ביחד">
     <meta property="og:type" content="website">
@@ -40,6 +48,8 @@
             <li role="none"><button type="button" class="add__item view-menu__item" role="menuitemradio" data-view="month" aria-checked="false"></button></li>
           </ul>
         </div>
+        <!-- Phone only; on desktop refresh lives in the top bar (ADR-7) -->
+        <button type="button" class="icon-btn daybar__refresh" data-refresh></button>
         <div class="add">
           <button type="button" class="btn btn--primary add__toggle add__toggle--wide" aria-expanded="false" aria-controls="add-menu"></button>
           <button type="button" class="fab add__toggle add__toggle--phone" aria-expanded="false" aria-controls="add-menu"></button>
@@ -52,14 +62,13 @@
 
       <div class="daybar">
         <button type="button" class="icon-btn" data-day="prev"></button>
-        <p class="daybar__date" aria-live="polite"></p>
+        <div class="daybar__center">
+          <p class="daybar__date" aria-live="polite"></p>
+          <!-- Phone only; on desktop it lives in the top bar (ADR-16) -->
+          <span class="last-updated daybar__updated" data-last-updated hidden></span>
+        </div>
         <button type="button" class="icon-btn" data-day="next"></button>
         <button type="button" class="btn btn--secondary btn--small daybar__today" hidden></button>
-        <!-- Phone only; on desktop both live in the top bar (ADR-7, ADR-16) -->
-        <div class="daybar__sync">
-          <span class="last-updated daybar__updated" data-last-updated hidden></span>
-          <button type="button" class="icon-btn daybar__refresh" data-refresh></button>
-        </div>
       </div>
 
       <div class="board__alerts"></div>

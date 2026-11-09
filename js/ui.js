@@ -47,6 +47,8 @@ export const MESSAGES = {
   thisWeek: 'השבוע',
   thisMonth: 'החודש',
   columnEmpty: 'אין משימות',
+  itemCount: (n) => (n === 1 ? 'פריט אחד' : `${n} פריטים`),
+  dayEmpty: 'אין פריטים',
   alsoAssigned: (names) => `גם: ${names}`,
   untimedRow: 'ללא שעה',
   emptyWeek: 'אין משימות ואירועים בשבוע הזה',

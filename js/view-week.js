@@ -8,6 +8,7 @@ import { MESSAGES, STATUS_LABELS, icon } from './ui.js';
 import {
   assignedMembers, compareItems, isUntimed, startMinutes, endMinutes, hourRange, itemTimeText, openItem,
 } from './cards.js';
+import { makeDraggable } from './week-drag.js';
 
 // A task (no end time) or an event without an end gets one hour of height.
 const POINT_MINUTES = 60;
@@ -57,7 +58,7 @@ function layoutDay(items) {
 }
 
 // One block: member tint + stripe, title, time and avatars (never color alone).
-function renderBlock(item, { compact }) {
+function renderBlock(item, { compact, onMove }) {
   const members = assignedMembers(item.assigned_member_ids);
   const clickable = item.kind === 'task' || item.source === 'homie';
   const block = document.createElement(clickable ? 'button' : 'div');
@@ -67,6 +68,7 @@ function renderBlock(item, { compact }) {
     block.dataset.kind = item.kind;
     block.dataset.id = item.id;
     block.addEventListener('click', () => openItem(item, block));
+    if (onMove) makeDraggable(block, item, { onDrop: onMove });
   }
   if (compact) block.classList.add('week-block--untimed');
   if (members.length > 0) {
@@ -125,7 +127,8 @@ function renderLegend() {
 }
 
 // from: Sunday of the shown week. onOpenDay(date) switches to the daily view.
-export function renderWeek(container, items, { from, onOpenDay }) {
+// onMove(item, changes) saves a drag-and-drop move (week-drag.js).
+export function renderWeek(container, items, { from, onOpenDay, onMove }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(from, i));
   const today = todayISO();
   const [first, last] = hourRange(items);
@@ -145,6 +148,8 @@ export function renderWeek(container, items, { from, onOpenDay }) {
   const grid = document.createElement('div');
   grid.className = 'week__grid';
   grid.style.setProperty('--hours', String(last - first));
+  grid.dataset.first = String(first);
+  grid.dataset.last = String(last);
 
   // Header row: corner + one button per day.
   const corner = document.createElement('div');
@@ -154,6 +159,7 @@ export function renderWeek(container, items, { from, onOpenDay }) {
     const head = document.createElement('button');
     head.type = 'button';
     head.className = 'week__day';
+    head.dataset.date = day;
     if (day === today) head.classList.add('week__day--today');
     head.setAttribute('aria-label', MESSAGES.openDay(formatDayLabel(day)));
     if (day === today) head.setAttribute('aria-current', 'date');
@@ -176,10 +182,11 @@ export function renderWeek(container, items, { from, onOpenDay }) {
   for (const day of days) {
     const cell = document.createElement('div');
     cell.className = 'week__untimed';
+    cell.dataset.date = day;
     cell.setAttribute('role', 'group');
     cell.setAttribute('aria-label', `${formatDayLabel(day)}, ${MESSAGES.untimedRow}`);
     const dayItems = items.filter((i) => i.date === day && isUntimed(i)).sort(compareItems);
-    for (const item of dayItems) cell.append(renderBlock(item, { compact: true }));
+    for (const item of dayItems) cell.append(renderBlock(item, { compact: true, onMove }));
     grid.append(cell);
   }
 
@@ -199,12 +206,13 @@ export function renderWeek(container, items, { from, onOpenDay }) {
   for (const day of days) {
     const col = document.createElement('div');
     col.className = 'week__col';
+    col.dataset.date = day;
     if (day === today) col.classList.add('week__col--today');
     col.setAttribute('role', 'group');
     col.setAttribute('aria-label', formatDayLabel(day));
     const timed = items.filter((i) => i.date === day && !isUntimed(i));
     for (const { item, lane, lanes } of layoutDay(timed)) {
-      const block = renderBlock(item, { compact: false });
+      const block = renderBlock(item, { compact: false, onMove });
       const start = startMinutes(item);
       const end = Math.min(blockEnd(item), last * 60);
       block.style.setProperty('--top', String(start - first * 60));

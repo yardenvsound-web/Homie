@@ -7,8 +7,8 @@
 // F10 (overlap chip) and F32 ("עודכן ב-Google" chip).
 
 import { initProtectedPage, refreshPendingCount } from './nav.js';
-import { getBoardTasks } from './data/tasks.js';
-import { getBoardEvents } from './data/events.js';
+import { getBoardTasks, updateTask } from './data/tasks.js';
+import { getBoardEvents, updateEvent } from './data/events.js';
 import {
   todayISO, addDays, addMonths, weekStart, monthStart, monthEnd,
   formatDayLabel, formatWeekRange, formatMonthLabel,
@@ -106,7 +106,7 @@ function renderBoard(tasks, events) {
     hasContent = renderDay(el.view, items, { onStatusSaved });
     updateOverlapChips(items);
   } else if (view === 'week') {
-    renderWeek(el.view, items, { from: range.from, onOpenDay: openDay });
+    renderWeek(el.view, items, { from: range.from, onOpenDay: openDay, onMove: moveItem });
   } else {
     renderMonth(el.view, items, { ...range, month: selectedDate.slice(0, 7), onOpenDay: openDay });
   }
@@ -121,6 +121,33 @@ function renderBoard(tasks, events) {
     (target ?? visibleToggle()).focus();
     focusItem = null;
   }
+}
+
+// Drag and drop in the weekly view: show the move right away, then save it
+// (Last Write Wins, F41). On failure the board reloads the saved state.
+async function moveItem(item, changes) {
+  const { kind, id } = item;
+  const before = Object.fromEntries(Object.keys(changes).map((k) => [k, item[k]]));
+  patchShown(kind, id, changes);
+  clearError(el.alerts);
+  try {
+    const { found } = kind === 'task' ? await updateTask(id, changes) : await updateEvent(id, changes);
+    if (!found) afterGone(kind === 'task' ? MESSAGES.taskGone : MESSAGES.eventGone);
+  } catch (err) {
+    console.error('Move failed:', err);
+    patchShown(kind, id, before);
+    showError(el.alerts, MESSAGES.statusSaveFailed, () => load({ keep: true }));
+  }
+}
+
+// Changes one item on screen and draws the board again (no reload).
+function patchShown(kind, id, fields) {
+  const target = shownItems.find((i) => i.kind === kind && i.id === id);
+  if (target) Object.assign(target, fields);
+  renderBoard(
+    shownItems.filter((i) => i.kind === 'task'),
+    shownItems.filter((i) => i.kind === 'event'),
+  );
 }
 
 // ---------- Loading ----------

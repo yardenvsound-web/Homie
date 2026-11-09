@@ -2312,3 +2312,52 @@ button.week-block:focus-visible {
     height: var(--space-3);
   }
 }
+
+/* Weekly view drag and drop */
+.week-block--draggable {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.week-block--dragging {
+  opacity: 0.35;
+}
+
+.week-block--ghost {
+  position: fixed;
+  inset-inline-start: auto;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.95;
+  box-shadow: var(--shadow-soft);
+  overflow: visible;
+  cursor: grabbing;
+}
+
+/* Where the block will land, shown above it */
+.week-block__drop {
+  position: absolute;
+  bottom: calc(100% + var(--space-1));
+  inset-inline-start: 0;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-text);
+  color: var(--color-surface);
+  font: var(--font-caption-xs);
+  white-space: nowrap;
+}
+
+.week__col.is-drop-target,
+.week__untimed.is-drop-target,
+.week__day.is-drop-target {
+  background-color: var(--color-bg-done);
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+}
+
+body.is-dragging,
+body.is-dragging * {
+  cursor: grabbing !important;
+}
